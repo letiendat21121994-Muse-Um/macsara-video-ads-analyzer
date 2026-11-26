@@ -223,7 +223,7 @@
       <section id="sec-videos" role="tabpanel" aria-labelledby="tab-videos">
         <div class="panel" id="drivePanel">
           <h2>Import from a Google Drive folder</h2>
-          <p class="sub">Paste <b>one</b> folder link — the tool lists every video file in that folder so you can tick the ones to add. It only reads the folder itself: subfolders are never opened, so videos inside the “đã Upload” subfolder are not imported. The folder must be shared as <b>Anyone with the link can view</b>.</p>
+          <p class="sub">Paste <b>one</b> folder link — the tool lists every video file in that folder so you can tick the ones to add. It only reads the folder itself: subfolders are never opened, so videos inside the “đã Upload” subfolder are not imported. The folder must be shared as <b>Anyone with the link can view</b>. The reliable way to scan is a free Google API key below; the no-key scan uses public relays that Google often blocks.</p>
           <div class="grid">
             <div class="full">
               <label class="f" for="driveLink">Google Drive folder link *</label>
@@ -242,8 +242,8 @@
             <summary>How the scan works, and what to do if it fails</summary>
             <ol>
               <li>Share the folder as <b>Anyone with the link can view</b> (right-click the folder in Drive → Share → General access).</li>
-              <li>Without a key, the scan reads the folder's public listing through a relay — it works for shared folders but can be slow or briefly blocked.</li>
-              <li>If it keeps failing, add a free Google API key: <b>Google Cloud Console → APIs &amp; Services → Credentials → Create API key</b>, enable the <b>Google Drive API</b> for that project, then paste the key above. The key stays in this browser and is only sent to Google.</li>
+              <li><b>Reliable way — free Google API key (about 2 minutes, no payment):</b> open <a href="https://console.cloud.google.com/apis/library/drive.googleapis.com" target="_blank" rel="noopener">Google Cloud Console → Drive API</a>, click Enable, then go to <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener">APIs &amp; Services → Credentials</a> → Create credentials → API key, and paste the key above. The key stays in this browser and is only sent to Google.</li>
+              <li>Without a key, the scan reads the folder's public listing through a public relay. That path is free but unreliable — Google frequently blocks those relays, so it can fail even for a correctly shared folder. If it fails, add the key from step 2 and scan again.</li>
             </ol>
           </details>
           <div class="drive-list" id="driveResults"></div>
@@ -971,19 +971,25 @@ No build step, no server, no dependencies. Catalog snapshot: see the Shop Catalo
         }).map(function(f){ return { id: f.id, name: f.name, url: f.webViewLink || driveFileUrl(f.id) }; });
       });
     }
+    /* No-key scan: public relays are best-effort — Google frequently
+       blocks them, so this can fail even for a correctly shared folder.
+       The Google API key path (scanViaApi) is the reliable one. */
     function scanViaRelay(folderId){
       var target = "https://drive.google.com/embeddedfolderview?id=" + folderId + "#list";
       var relays = [
-        "https://api.allorigins.win/raw?url=" + encodeURIComponent(target),
-        "https://api.codetabs.com/v1/proxy?quest=" + encodeURIComponent(target),
-        "https://corsproxy.io/?url=" + encodeURIComponent(target)
+        { name: "relay 1 of 3", get: function(){ return fetchWithTimeout("https://api.allorigins.win/raw?url=" + encodeURIComponent(target), 15000).then(function(r){ return r.text(); }); } },
+        { name: "relay 2 of 3", get: function(){ return fetchWithTimeout("https://api.allorigins.win/get?url=" + encodeURIComponent(target), 15000).then(function(r){ return r.json(); }).then(function(d){ return d.contents || ""; }); } },
+        { name: "relay 3 of 3", get: function(){ return fetchWithTimeout("https://api.codetabs.com/v1/proxy?quest=" + encodeURIComponent(target), 15000).then(function(r){ return r.text(); }); } }
       ];
-      var chain = Promise.reject();
-      relays.forEach(function(u){
+      var chain = Promise.reject(new Error("No relay tried yet"));
+      relays.forEach(function(relay){
         chain = chain.catch(function(){
-          return fetchWithTimeout(u, 20000).then(function(r){ return r.text(); }).then(function(html){
-            if (html.indexOf("flip-entry") === -1) throw new Error("No folder listing in relay response");
-            return parseEmbeddedFolderHTML(html);
+          $("driveStatus").textContent = "Scanning the folder… (trying " + relay.name + " — the no-key scan can be slow)";
+          return relay.get().then(function(html){
+            if (!html || html.indexOf("flip-entry") === -1) throw new Error("Relay did not return the folder listing");
+            var files = parseEmbeddedFolderHTML(html);
+            if (!files.length && html.indexOf("flip-entry-title") === -1) throw new Error("Relay did not return the folder listing");
+            return files;
           });
         });
       });
@@ -1041,7 +1047,11 @@ No build step, no server, no dependencies. Catalog snapshot: see the Shop Catalo
         $("driveStatus").textContent = "Found " + files.length + " video file(s) in the folder (" + fresh + " new). Tick the ones to add, then hit “Add selected videos”. Subfolders were not opened.";
         renderDriveResults();
       }).catch(function(err){
-        $("driveStatus").textContent = "Scan failed (" + (err && err.message ? err.message : "network error") + "). Check the folder is shared as “Anyone with the link can view”, then try again — or add a Google API key above and scan again.";
+        if (key) {
+          $("driveStatus").textContent = "Scan failed with the API key (" + (err && err.message ? err.message : "network error") + "). Check the key is correct and the Google Drive API is enabled for its project (see “How the scan works” above).";
+        } else {
+          $("driveStatus").textContent = "Scan failed: the no-key relays are blocked right now (" + (err && err.message ? err.message : "network error") + "). This happens often — Google blocks public relays. Add a free Google API key above (see “How the scan works”) and scan again; that path works reliably. Also confirm the folder is shared as “Anyone with the link can view”.";
+        }
       }).finally(function(){ btn.disabled = false; });
     });
     $("btnAddDrive").addEventListener("click", function(){
