@@ -116,6 +116,17 @@
       label.pick{display:inline-flex;align-items:center;gap:8px;font-weight:700;font-size:14px;cursor:pointer;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
       label.pick input{width:19px;height:19px;accent-color:var(--accent)}
       .picked{outline:2px solid var(--accent);outline-offset:-2px}
+      /* Drive folder import */
+      .drive-list{display:grid;gap:8px;margin-top:12px}
+      .drive-item{display:flex;gap:10px;align-items:center;background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:9px 12px}
+      .drive-item input{width:19px;height:19px;accent-color:var(--accent);flex:none}
+      .drive-item .nm{font-weight:700;font-size:14px;word-break:break-all}
+      .drive-item .lk{font-size:12.5px;color:var(--ink2);word-break:break-all}
+      .drive-item .dup{color:var(--warn);font-weight:700;font-size:12.5px}
+      details.help{margin-top:10px;font-size:13.5px;color:var(--ink2)}
+      details.help summary{cursor:pointer;font-weight:700;color:var(--ink)}
+      details.help ol{margin:8px 0 0;padding-left:20px}
+      details.help li{margin-bottom:4px}
       /* Group folders & launched status */
       .folder{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:12px;overflow:hidden}
       .folder-head{display:flex;flex-wrap:wrap;gap:8px;align-items:center;width:100%;background:var(--surface);border:none;padding:13px 16px;font:inherit;text-align:left;cursor:pointer;color:var(--ink)}
@@ -195,7 +206,7 @@
 
     <div class="wrap">
       <div class="steps" aria-label="Workflow">
-        <div class="step"><b><i>1</i> Add &amp; scan videos</b><p>Paste a link or upload a clip. The tool detects the product type, shade and texture in the clip and maps it to shop.macsarahair.com.</p></div>
+        <div class="step"><b><i>1</i> Add &amp; scan videos</b><p>Paste one Drive folder link to import all its videos at once, or add a single link / upload a clip. The tool detects the product type, shade and texture in the clip and maps it to shop.macsarahair.com.</p></div>
         <div class="step"><b><i>2</i> Analyze</b><p>Every video is scored on hook, clarity, trust and closing power, with strengths, weaknesses and a suggested Ring 1–5.</p></div>
         <div class="step"><b><i>3</i> Group in 3s</b><p>Auto-group or hand-pick exactly 3 videos. Each trio is named by its Ring and lives in its own folder — open it to view the videos inside.</p></div>
         <div class="step"><b><i>4</i> Copy 2 + 2</b><p>Each group gets 2 primary texts and 2 headlines in English, written from the mapped product and its real price. Mark a group Launched once it is live on Meta, so you always know what has run and what has not.</p></div>
@@ -210,6 +221,38 @@
 
       <!-- ============ VIDEOS ============ -->
       <section id="sec-videos" role="tabpanel" aria-labelledby="tab-videos">
+        <div class="panel" id="drivePanel">
+          <h2>Import from a Google Drive folder</h2>
+          <p class="sub">Paste <b>one</b> folder link — the tool lists every video file in that folder so you can tick the ones to add. It only reads the folder itself: subfolders are never opened, so videos inside the “đã Upload” subfolder are not imported. The folder must be shared as <b>Anyone with the link can view</b>.</p>
+          <div class="grid">
+            <div class="full">
+              <label class="f" for="driveLink">Google Drive folder link *</label>
+              <input type="url" id="driveLink" placeholder="https://drive.google.com/drive/folders/…" />
+            </div>
+            <div class="full">
+              <label class="f" for="driveKey">Google API key <span>(optional — only needed if the folder scan keeps failing; saved in this browser only)</span></label>
+              <input type="text" id="driveKey" placeholder="AIza…" autocomplete="off" />
+            </div>
+          </div>
+          <div class="toolbar" style="margin-top:14px;margin-bottom:0">
+            <button class="btn" id="btnScanDrive" type="button">Scan folder</button>
+            <span class="hint" id="driveStatus">Top-level video files only (.mp4, .mov, .webm, .mkv, .avi, .m4v). First page only if the folder holds more than about 100 files.</span>
+          </div>
+          <details class="help">
+            <summary>How the scan works, and what to do if it fails</summary>
+            <ol>
+              <li>Share the folder as <b>Anyone with the link can view</b> (right-click the folder in Drive → Share → General access).</li>
+              <li>Without a key, the scan reads the folder's public listing through a relay — it works for shared folders but can be slow or briefly blocked.</li>
+              <li>If it keeps failing, add a free Google API key: <b>Google Cloud Console → APIs &amp; Services → Credentials → Create API key</b>, enable the <b>Google Drive API</b> for that project, then paste the key above. The key stays in this browser and is only sent to Google.</li>
+            </ol>
+          </details>
+          <div class="drive-list" id="driveResults"></div>
+          <div class="toolbar" style="margin:12px 0 0;display:none" id="driveAddBar">
+            <button class="btn gold" id="btnAddDrive" type="button">Add selected videos</button>
+            <span class="hint" id="driveSelInfo"></span>
+          </div>
+        </div>
+
         <form class="panel" id="addForm">
           <h2>Add a video</h2>
           <p class="sub">Give the tool as much signal as you can — the hook line and transcript drive both the product scan and the analysis.</p>
@@ -873,6 +916,154 @@ No build step, no server, no dependencies. Catalog snapshot: see the Shop Catalo
       if (btn.dataset.act === "del"){ videos = videos.filter(function(x){ return x.id!==id; }); groups = groups.filter(function(g){ return g.videoIds.indexOf(id) === -1; }); renderVideos(); renderGroups(); toast("Video deleted."); }
     }
 
+    /* ===== Google Drive folder scan ===== */
+    var DRIVE_KEY_LS = "macsara-drive-key";
+    var driveScanResults = [];   // {id,name,url,alreadyAdded}
+    var VIDEO_EXTS = ["mp4","mov","webm","mkv","avi","m4v"];
+    function driveFolderId(link){
+      var m = String(link||"").match(/\/drive\/folders\/([A-Za-z0-9_-]+)/);
+      if (m) return m[1];
+      m = String(link||"").match(/[?&]id=([A-Za-z0-9_-]+)/);
+      if (m) return m[1];
+      return null;
+    }
+    function isVideoName(name){
+      var ext = String(name||"").split(".").pop().toLowerCase();
+      return VIDEO_EXTS.indexOf(ext) > -1;
+    }
+    function driveFileUrl(id){ return "https://drive.google.com/file/d/" + id + "/view"; }
+    /* Parse Drive's public embedded folder view: file entries link to
+       /file/d/<id>/view, subfolder entries link to /drive/folders/<id>
+       and are skipped entirely — never opened, never recursed into. */
+    function parseEmbeddedFolderHTML(html){
+      var doc = new DOMParser().parseFromString(html, "text/html");
+      var out = [], seen = {};
+      doc.querySelectorAll(".flip-entry").forEach(function(entry){
+        var a = entry.querySelector("a[href]");
+        var titleEl = entry.querySelector(".flip-entry-title");
+        if (!a || !titleEl) return;
+        var m = a.getAttribute("href").match(/\/file\/d\/([A-Za-z0-9_-]+)/);
+        if (!m) return;   // subfolder (links to /drive/folders/…) or other entry
+        var name = titleEl.textContent.trim();
+        if (!isVideoName(name) || seen[m[1]]) return;
+        seen[m[1]] = true;
+        out.push({ id: m[1], name: name, url: driveFileUrl(m[1]) });
+      });
+      return out;
+    }
+    function fetchWithTimeout(url, ms){
+      var ctrl = new AbortController();
+      var t = setTimeout(function(){ ctrl.abort(); }, ms || 20000);
+      return fetch(url, { signal: ctrl.signal }).then(function(r){
+        clearTimeout(t);
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        return r;
+      }).catch(function(e){ clearTimeout(t); throw e; });
+    }
+    function scanViaApi(folderId, key){
+      var q = encodeURIComponent("'" + folderId + "' in parents and trashed=false");
+      var url = "https://www.googleapis.com/drive/v3/files?pageSize=100&q=" + q + "&fields=files(id,name,mimeType,webViewLink)&key=" + encodeURIComponent(key);
+      return fetchWithTimeout(url, 20000).then(function(r){ return r.json(); }).then(function(d){
+        if (d.error) throw new Error(d.error.message || "Drive API error");
+        return (d.files || []).filter(function(f){
+          if (f.mimeType === "application/vnd.google-apps.folder") return false;  // subfolder, incl. “đã Upload” — never entered
+          return f.mimeType && f.mimeType.indexOf("video/") === 0 || isVideoName(f.name);
+        }).map(function(f){ return { id: f.id, name: f.name, url: f.webViewLink || driveFileUrl(f.id) }; });
+      });
+    }
+    function scanViaRelay(folderId){
+      var target = "https://drive.google.com/embeddedfolderview?id=" + folderId + "#list";
+      var relays = [
+        "https://api.allorigins.win/raw?url=" + encodeURIComponent(target),
+        "https://api.codetabs.com/v1/proxy?quest=" + encodeURIComponent(target),
+        "https://corsproxy.io/?url=" + encodeURIComponent(target)
+      ];
+      var chain = Promise.reject();
+      relays.forEach(function(u){
+        chain = chain.catch(function(){
+          return fetchWithTimeout(u, 20000).then(function(r){ return r.text(); }).then(function(html){
+            if (html.indexOf("flip-entry") === -1) throw new Error("No folder listing in relay response");
+            return parseEmbeddedFolderHTML(html);
+          });
+        });
+      });
+      return chain;
+    }
+    function renderDriveResults(){
+      var box = $("driveResults");
+      if (!driveScanResults.length){
+        box.innerHTML = "";
+        $("driveAddBar").style.display = "none";
+        return;
+      }
+      var sel = driveScanResults.filter(function(f){ return f.checked && !f.alreadyAdded; }).length;
+      $("driveSelInfo").textContent = sel + " selected to add";
+      $("driveAddBar").style.display = "flex";
+      box.innerHTML = driveScanResults.map(function(f, i){
+        return '<label class="drive-item"><input type="checkbox" data-drive-idx="'+i+'"'+(f.checked && !f.alreadyAdded ? " checked" : "")+(f.alreadyAdded ? " disabled" : "")+' />'
+          + '<span><span class="nm">'+esc(f.name)+'</span><br /><span class="lk">'+esc(f.url)+'</span>'
+          + (f.alreadyAdded ? ' <span class="dup">Already added</span>' : '') + '</span></label>';
+      }).join("");
+      box.querySelectorAll("[data-drive-idx]").forEach(function(cb){
+        cb.addEventListener("change", function(){
+          driveScanResults[Number(cb.dataset.driveIdx)].checked = cb.checked;
+          renderDriveResults();
+        });
+      });
+    }
+    function driveVideoTitle(name){
+      return name.replace(/\.[^.]+$/, "").replace(/[_+.]+/g, " ").replace(/\s+/g, " ").trim();
+    }
+    $("btnScanDrive").addEventListener("click", function(){
+      var link = $("driveLink").value.trim();
+      var key = $("driveKey").value.trim();
+      if (key){ try { localStorage.setItem(DRIVE_KEY_LS, key); } catch(e){} }
+      var folderId = driveFolderId(link);
+      if (!folderId){
+        if (/\/file\/d\//.test(link)){ $("driveStatus").textContent = "That is a single file link, not a folder link — paste the folder link (…/drive/folders/…)."; }
+        else { $("driveStatus").textContent = "Paste a Google Drive folder link first (…/drive/folders/…)."; }
+        return;
+      }
+      var btn = $("btnScanDrive");
+      btn.disabled = true;
+      $("driveStatus").textContent = "Scanning the folder…";
+      driveScanResults = []; renderDriveResults();
+      var attempt = key ? scanViaApi(folderId, key) : scanViaRelay(folderId);
+      attempt.then(function(files){
+        if (!files.length){
+          $("driveStatus").textContent = "No video files found in this folder. Check the folder is shared as “Anyone with the link can view” and that the videos sit directly in the folder, not inside a subfolder.";
+          return;
+        }
+        var existing = {};
+        videos.forEach(function(v){ var m = String(v.url||"").match(/\/file\/d\/([A-Za-z0-9_-]+)/); if (m) existing[m[1]] = true; });
+        driveScanResults = files.map(function(f){ return { id: f.id, name: f.name, url: f.url, checked: !existing[f.id], alreadyAdded: !!existing[f.id] }; });
+        var fresh = driveScanResults.filter(function(f){ return !f.alreadyAdded; }).length;
+        $("driveStatus").textContent = "Found " + files.length + " video file(s) in the folder (" + fresh + " new). Tick the ones to add, then hit “Add selected videos”. Subfolders were not opened.";
+        renderDriveResults();
+      }).catch(function(err){
+        $("driveStatus").textContent = "Scan failed (" + (err && err.message ? err.message : "network error") + "). Check the folder is shared as “Anyone with the link can view”, then try again — or add a Google API key above and scan again.";
+      }).finally(function(){ btn.disabled = false; });
+    });
+    $("btnAddDrive").addEventListener("click", function(){
+      var toAdd = driveScanResults.filter(function(f){ return f.checked && !f.alreadyAdded; });
+      if (!toAdd.length){ toast("Tick at least one new video first."); return; }
+      var added = 0;
+      toAdd.forEach(function(f){
+        var v = {
+          id: uid++, title: driveVideoTitle(f.name), url: f.url,
+          fileUrl: "", fileName: "", thumb: "", duration: "",
+          format: "9:16 vertical", ring: 0, angle: "Before/After UGC",
+          hook: "", transcript: "", notes: "Imported from Drive folder",
+          selected: false, analysis: null, scan: null
+        };
+        v.scan = scanProduct(v);
+        videos.unshift(v); added++;
+      });
+      driveScanResults.forEach(function(f){ if (f.checked) f.alreadyAdded = true; });
+      renderVideos(); renderDriveResults();
+      toast(added + " video(s) added from the Drive folder. Fill in each hook/transcript, then Analyze.");
+    });
+
     /* ===== Events: add form ===== */
     var pendingFile = null;
     $("fFile").addEventListener("change", function(){
@@ -1033,6 +1224,7 @@ No build step, no server, no dependencies. Catalog snapshot: see the Shop Catalo
     $("btnCopyReadme").addEventListener("click", function(){ copyText($("readmeBox").textContent, "README.md copied."); });
 
     /* ===== Init ===== */
+    try { var savedKey = localStorage.getItem(DRIVE_KEY_LS); if (savedKey) $("driveKey").value = savedKey; } catch(e){}
     loadState();
     renderVideos(); renderGroups(); renderCatalog();
     </script>
