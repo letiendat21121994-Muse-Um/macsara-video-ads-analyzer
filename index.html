@@ -1,0 +1,861 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" href="data:," />
+    <title>Video Ads Analyzer — Macsara Hair (3:2:2)</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <style>
+      button, [role="button"], select, summary, input:not([type="checkbox"], [type="radio"]), textarea { min-height: 2.25rem; }
+      :root{
+        --bg:#fbfaf8; --surface:#ffffff; --surface2:#f3efe9; --ink:#221a15; --ink2:#5d5248;
+        --line:#e3d9cd; --accent:#7c2231; --accent-ink:#ffffff; --gold:#a97b2f; --gold-soft:#f3e8d2;
+        --good:#1e7a46; --warn:#b06a00; --bad:#b3352b; --chip:#efe7db;
+        --shadow:0 1px 2px rgba(34,26,21,.06),0 8px 24px rgba(34,26,21,.06);
+        --radius:14px;
+      }
+      @media (prefers-color-scheme: dark){
+        :root{
+          --bg:#17120e; --surface:#221a14; --surface2:#2b211a; --ink:#f2e9dd; --ink2:#bfae9c;
+          --line:#3d2f24; --accent:#d96a76; --accent-ink:#1d0d10; --gold:#d9ab55; --gold-soft:#3a2d16;
+          --good:#5cc98a; --warn:#e0a44a; --bad:#e07a6d; --chip:#33271d;
+          --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35);
+        }
+      }
+      *{box-sizing:border-box}
+      html{-webkit-text-size-adjust:100%}
+      body{margin:0;background:var(--bg);color:var(--ink);font-family:"Manrope",system-ui,sans-serif;font-size:16px;line-height:1.5}
+      h1,h2,h3{font-family:"Playfair Display",Georgia,serif;line-height:1.15;margin:0}
+      a{color:var(--accent)}
+      .wrap{max-width:1180px;margin:0 auto;padding:0 16px 64px}
+      /* Header */
+      header.top{border-bottom:1px solid var(--line);background:var(--surface)}
+      .top-in{max-width:1180px;margin:0 auto;padding:18px 16px 14px;display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end;justify-content:space-between}
+      .brand small{display:block;font-weight:800;letter-spacing:.14em;text-transform:uppercase;font-size:11px;color:var(--gold)}
+      .brand h1{font-size:clamp(26px,4.5vw,38px);font-weight:800}
+      .brand p{margin:4px 0 0;color:var(--ink2);max-width:56ch;font-size:14.5px}
+      .usp{display:flex;flex-wrap:wrap;gap:6px}
+      .usp span{background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:5px 11px;font-size:12.5px;font-weight:600}
+      /* Steps */
+      .steps{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 4px}
+      .step{flex:1 1 200px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px;box-shadow:var(--shadow)}
+      .step b{display:flex;align-items:center;gap:8px;font-size:14.5px}
+      .step i{font-style:normal;background:var(--accent);color:var(--accent-ink);width:24px;height:24px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex:none}
+      .step p{margin:6px 0 0;font-size:13px;color:var(--ink2)}
+      /* Tabs */
+      nav.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:20px 0 16px;border-bottom:2px solid var(--line)}
+      nav.tabs button{background:none;border:none;border-bottom:3px solid transparent;margin-bottom:-2px;padding:10px 14px;font:inherit;font-weight:700;color:var(--ink2);cursor:pointer;border-radius:8px 8px 0 0}
+      nav.tabs button[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent)}
+      nav.tabs button .count{background:var(--chip);border-radius:999px;padding:1px 8px;font-size:12px;margin-left:4px}
+      section[hidden]{display:none}
+      /* Buttons */
+      .btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;background:var(--accent);color:var(--accent-ink);border:1px solid var(--accent);border-radius:10px;padding:9px 16px;font:inherit;font-weight:700;font-size:14.5px;cursor:pointer;text-decoration:none}
+      .btn:hover{filter:brightness(1.07)}
+      .btn.ghost{background:var(--surface);color:var(--ink);border-color:var(--line)}
+      .btn.gold{background:var(--gold);border-color:var(--gold);color:#fff}
+      @media (prefers-color-scheme: dark){.btn.gold{color:#221a08}}
+      .btn.small{padding:6px 12px;font-size:13.5px;min-height:2.25rem}
+      .btn:disabled{opacity:.45;cursor:not-allowed}
+      .toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 14px}
+      .toolbar .spacer{flex:1}
+      .hint{font-size:13px;color:var(--ink2)}
+      /* Form */
+      .panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px;margin-bottom:18px}
+      .panel h2{font-size:21px;margin-bottom:4px}
+      .panel .sub{color:var(--ink2);font-size:14px;margin:0 0 14px}
+      .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+      .grid .full{grid-column:1/-1}
+      label.f{display:block;font-size:13px;font-weight:700;margin-bottom:4px}
+      label.f span{font-weight:500;color:var(--ink2)}
+      input[type="text"],input[type="url"],select,textarea{width:100%;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:9px 11px;font:inherit;font-size:14.5px}
+      textarea{resize:vertical;min-height:64px}
+      input[type="file"]{font:inherit;font-size:14px;padding:8px 0}
+      /* Video cards */
+      .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px}
+      .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;display:flex;flex-direction:column}
+      .thumb{aspect-ratio:16/9;background:var(--surface2);display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative}
+      .thumb img,.thumb video{width:100%;height:100%;object-fit:cover;display:block}
+      .thumb .fmt{position:absolute;left:10px;bottom:10px;background:rgba(20,12,8,.78);color:#fff;font-size:12px;font-weight:700;padding:3px 9px;border-radius:999px}
+      .thumb .dur{position:absolute;right:10px;bottom:10px;background:rgba(20,12,8,.78);color:#fff;font-size:12px;font-weight:700;padding:3px 9px;border-radius:999px}
+      .thumb .noimg{color:var(--ink2);font-size:13px;text-align:center;padding:12px}
+      .card .body{padding:14px 16px 16px;display:flex;flex-direction:column;gap:10px;flex:1}
+      .card h3{font-size:17.5px;font-family:"Manrope",sans-serif;font-weight:800}
+      .meta{display:flex;flex-wrap:wrap;gap:6px}
+      .tag{background:var(--chip);border-radius:999px;padding:3px 10px;font-size:12px;font-weight:700}
+      .tag.ring{background:var(--gold-soft);color:var(--gold)}
+      .src{font-size:12.5px;color:var(--ink2);word-break:break-all}
+      .src a{color:var(--ink2)}
+      .hookline{font-size:14px;background:var(--surface2);border-radius:10px;padding:9px 11px}
+      .hookline b{font-size:11.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--gold);display:block}
+      /* Product mapping */
+      .mapbox{border:1px solid var(--line);border-left:4px solid var(--gold);border-radius:10px;padding:10px 12px;background:var(--surface)}
+      .mapbox .lbl{font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--gold)}
+      .mapbox .pname{font-weight:800;font-size:14.5px;margin:2px 0}
+      .mapbox .price{font-size:14px}
+      .mapbox .price s{color:var(--ink2)}
+      .mapbox .off{background:var(--accent);color:var(--accent-ink);border-radius:6px;padding:1px 7px;font-size:12px;font-weight:800;margin-left:6px}
+      .mapbox select{margin-top:8px}
+      .conf{font-size:12.5px;color:var(--ink2)}
+      /* Scores */
+      .scores{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+      .score{background:var(--surface2);border-radius:10px;padding:8px 11px}
+      .score .n{font-size:12px;font-weight:700;color:var(--ink2);display:flex;justify-content:space-between}
+      .bar{height:7px;background:var(--line);border-radius:99px;margin-top:5px;overflow:hidden}
+      .bar i{display:block;height:100%;border-radius:99px;background:var(--gold)}
+      .overall{display:flex;align-items:center;gap:10px;background:var(--gold-soft);border-radius:10px;padding:9px 12px}
+      .overall .big{font-family:"Playfair Display",serif;font-size:26px;font-weight:800;color:var(--gold)}
+      .sw{font-size:13.5px}
+      .sw ul{margin:4px 0 0;padding-left:18px}
+      .sw .good{color:var(--good);font-weight:700}
+      .sw .bad{color:var(--bad);font-weight:700}
+      .card .foot{margin-top:auto;display:flex;flex-wrap:wrap;gap:8px;align-items:center;border-top:1px solid var(--line);padding-top:12px}
+      label.pick{display:inline-flex;align-items:center;gap:8px;font-weight:700;font-size:14px;cursor:pointer;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+      label.pick input{width:19px;height:19px;accent-color:var(--accent)}
+      .picked{outline:2px solid var(--accent);outline-offset:-2px}
+      /* Groups */
+      .group{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px;margin-bottom:16px}
+      .group head{display:block}
+      .group h3{font-size:20px}
+      .trio{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:12px 0}
+      .trio .slot{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface2)}
+      .trio .slot .t{aspect-ratio:16/9;background:var(--surface2);overflow:hidden}
+      .trio .slot img,.trio .slot video{width:100%;height:100%;object-fit:cover;display:block}
+      .trio .slot .cap{padding:8px 10px;font-size:13px}
+      .trio .slot .cap b{display:block;font-size:13.5px}
+      .copygrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+      .copybox label.f{color:var(--gold)}
+      .copybox textarea{min-height:110px}
+      .copybox .hl{min-height:52px}
+      .empty{border:1.5px dashed var(--line);border-radius:var(--radius);padding:28px 18px;text-align:center;color:var(--ink2);background:var(--surface)}
+      .empty b{color:var(--ink);display:block;font-size:16px;margin-bottom:4px}
+      /* Catalog */
+      .filters{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+      .filters button{background:var(--surface);border:1px solid var(--line);color:var(--ink);border-radius:999px;padding:7px 14px;font:inherit;font-size:13.5px;font-weight:700;cursor:pointer}
+      .filters button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+      .prod{display:flex;flex-direction:column;gap:4px;padding:14px 16px}
+      .prod h3{font-family:"Manrope",sans-serif;font-size:15.5px;font-weight:800}
+      .prod .price{font-size:15px;font-weight:800}
+      .prod .price s{color:var(--ink2);font-weight:500}
+      .prod .off{align-self:flex-start;background:var(--accent);color:var(--accent-ink);border-radius:6px;padding:1px 8px;font-size:12px;font-weight:800}
+      .prod a{font-size:13.5px;font-weight:700;margin-top:auto;padding-top:6px}
+      /* Brand / GitHub */
+      .cols{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+      .codebox{background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:12px 14px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;white-space:pre-wrap;word-break:break-word;max-height:260px;overflow:auto}
+      ol.steps-list{margin:8px 0 0;padding-left:20px;font-size:14.5px}
+      ol.steps-list li{margin-bottom:6px}
+      .toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--bg);padding:11px 18px;border-radius:999px;font-weight:700;font-size:14px;opacity:0;pointer-events:none;transition:.25s;z-index:50;max-width:92vw;text-align:center}
+      .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+      footer{margin-top:34px;border-top:1px solid var(--line);padding-top:14px;font-size:13px;color:var(--ink2)}
+      @media (max-width:760px){
+        .grid,.copygrid,.cols{grid-template-columns:1fr}
+        .trio{grid-template-columns:1fr}
+        .cards{grid-template-columns:1fr}
+        .scores{grid-template-columns:1fr 1fr}
+      }
+    </style>
+  </head>
+  <body>
+    <header class="top">
+      <div class="top-in">
+        <div class="brand">
+          <small>Macsara Hair · Meta Ads Creative Tool</small>
+          <h1>Video Ads Analyzer</h1>
+          <p>Analyze ad videos, scan the hair product shown in each clip, map it to the shop catalog synced from shop.macsarahair.com, then build 3:2:2 groups — 3 videos with 2 primary texts and 2 headlines each.</p>
+        </div>
+        <div class="usp">
+          <span>100% Vietnamese Remy Human Hair</span>
+          <span>Direct from Manufacturer</span>
+          <span>30-Day Exchange &amp; Return</span>
+          <span>Black Friday −50%</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="wrap">
+      <div class="steps" aria-label="Workflow">
+        <div class="step"><b><i>1</i> Add &amp; scan videos</b><p>Paste a link or upload a clip. The tool detects the product type, shade and texture in the clip and maps it to shop.macsarahair.com.</p></div>
+        <div class="step"><b><i>2</i> Analyze</b><p>Every video is scored on hook, clarity, trust and closing power, with strengths, weaknesses and a suggested Ring 1–5.</p></div>
+        <div class="step"><b><i>3</i> Group in 3s</b><p>Auto-group or hand-pick exactly 3 videos. Each trio becomes one Flexible Ad creative set.</p></div>
+        <div class="step"><b><i>4</i> Copy 2 + 2</b><p>Each group gets 2 primary texts and 2 headlines in English, written from the mapped product and its real price.</p></div>
+      </div>
+
+      <nav class="tabs" role="tablist" aria-label="Sections">
+        <button role="tab" id="tab-videos" aria-selected="true" data-tab="videos">Videos <span class="count" id="countVideos">0</span></button>
+        <button role="tab" id="tab-groups" aria-selected="false" data-tab="groups">3:2:2 Groups <span class="count" id="countGroups">0</span></button>
+        <button role="tab" id="tab-catalog" aria-selected="false" data-tab="catalog">Shop Catalog <span class="count" id="countCatalog">0</span></button>
+        <button role="tab" id="tab-brand" aria-selected="false" data-tab="brand">Brand &amp; Publish</button>
+      </nav>
+
+      <!-- ============ VIDEOS ============ -->
+      <section id="sec-videos" role="tabpanel" aria-labelledby="tab-videos">
+        <form class="panel" id="addForm">
+          <h2>Add a video</h2>
+          <p class="sub">Give the tool as much signal as you can — the hook line and transcript drive both the product scan and the analysis.</p>
+          <div class="grid">
+            <div>
+              <label class="f" for="fTitle">Video title *</label>
+              <input type="text" id="fTitle" required placeholder="e.g. UGC before/after — Tape-In Natural Black 22in" />
+            </div>
+            <div>
+              <label class="f" for="fUrl">Video link <span>(YouTube, TikTok, Drive, or direct .mp4)</span></label>
+              <input type="url" id="fUrl" placeholder="https://…" />
+            </div>
+            <div>
+              <label class="f" for="fFile">…or upload the video file</label>
+              <input type="file" id="fFile" accept="video/*" />
+            </div>
+            <div>
+              <label class="f" for="fFormat">Format</label>
+              <select id="fFormat">
+                <option value="9:16 vertical">9:16 vertical</option>
+                <option value="4:5 portrait">4:5 portrait</option>
+                <option value="1:1 square">1:1 square</option>
+                <option value="16:9 landscape">16:9 landscape</option>
+              </select>
+            </div>
+            <div>
+              <label class="f" for="fRing">Ring <span>(leave on Auto if unsure)</span></label>
+              <select id="fRing">
+                <option value="0">Auto — let the analysis decide</option>
+                <option value="1">Ring 1 — First Hello (cold UGC)</option>
+                <option value="2">Ring 2 — Second Hello (demo / factory)</option>
+                <option value="3">Ring 3 — Third Hello (testimonial)</option>
+                <option value="4">Ring 4 — First Close (offer)</option>
+                <option value="5">Ring 5 — Second Close (color match / objection)</option>
+              </select>
+            </div>
+            <div>
+              <label class="f" for="fAngle">Creative angle</label>
+              <select id="fAngle">
+                <option value="Before/After UGC">Before/After UGC</option>
+                <option value="Stylist / Install Demo">Stylist / Install Demo</option>
+                <option value="Factory Tour">Factory Tour</option>
+                <option value="Testimonial / Review">Testimonial / Review</option>
+                <option value="Wedding / Occasion">Wedding / Occasion</option>
+                <option value="Offer / Sale">Offer / Sale</option>
+                <option value="Color Match / Shade Guide">Color Match / Shade Guide</option>
+                <option value="Hair Quality Close-Up">Hair Quality Close-Up</option>
+                <option value="Unboxing">Unboxing</option>
+              </select>
+            </div>
+            <div class="full">
+              <label class="f" for="fHook">Hook <span>(first 3 seconds — spoken line or on-screen text)</span></label>
+              <input type="text" id="fHook" placeholder="e.g. Thin hair? This took 10 minutes." />
+            </div>
+            <div class="full">
+              <label class="f" for="fTranscript">Transcript / what happens in the clip <span>(mention the product, shade, length — the scanner reads this)</span></label>
+              <textarea id="fTranscript" placeholder="e.g. Stylist installs Tape-In extensions in Natural Black 1B, 22 inches. Shows the tape tabs up close, brushes through, no tangling…"></textarea>
+            </div>
+            <div class="full">
+              <label class="f" for="fNotes">Notes <span>(optional)</span></label>
+              <input type="text" id="fNotes" placeholder="e.g. Shot at partner salon in Texas, model has fine hair" />
+            </div>
+          </div>
+          <div class="toolbar" style="margin-top:14px;margin-bottom:0">
+            <button class="btn" type="submit">Add video &amp; scan product</button>
+            <span class="hint">The product scan runs on the title, hook and transcript the moment you add the video.</span>
+          </div>
+        </form>
+
+        <div class="toolbar">
+          <button class="btn gold" id="btnAnalyzeAll" type="button">Analyze all videos</button>
+          <button class="btn ghost" id="btnAutoGroup2" type="button">Auto-group into trios →</button>
+          <span class="spacer"></span>
+          <span class="hint" id="selInfo">0 of 3 selected for a manual group</span>
+          <button class="btn" id="btnManualGroup" type="button" disabled>Create group from selected (3)</button>
+        </div>
+
+        <div class="cards" id="videoCards"></div>
+        <div class="empty" id="videoEmpty">
+          <b>No videos yet</b>
+          Add your first clip above — a YouTube, TikTok or Drive link, or upload the file directly. Try one Tape-In, one Genius Weft and one testimonial clip to make your first trio.
+        </div>
+      </section>
+
+      <!-- ============ GROUPS ============ -->
+      <section id="sec-groups" role="tabpanel" aria-labelledby="tab-groups" hidden>
+        <div class="toolbar">
+          <button class="btn gold" id="btnAutoGroup" type="button">Auto-group into trios</button>
+          <button class="btn ghost" id="btnExport" type="button">Export all copy (.txt)</button>
+          <span class="spacer"></span>
+          <span class="hint">One group = one Meta Flexible Ad: 3 creatives + 2 primary texts + 2 headlines = 12 combinations sharing one data pool.</span>
+        </div>
+        <div id="groupList"></div>
+        <div class="empty" id="groupEmpty">
+          <b>No groups yet</b>
+          Add at least 3 videos in the Videos tab, then auto-group — or tick exactly 3 videos and create the group by hand.
+        </div>
+      </section>
+
+      <!-- ============ CATALOG ============ -->
+      <section id="sec-catalog" role="tabpanel" aria-labelledby="tab-catalog" hidden>
+        <div class="panel" style="margin-bottom:14px">
+          <h2>Shop catalog — shop.macsarahair.com</h2>
+          <p class="sub" style="margin-bottom:0">Catalog snapshot synced on <b id="syncDate"></b>. The scanner maps every clip to one of these products, and ad copy is written with the mapped product's real name and price. Prices include the current Black Friday discount shown on the shop.</p>
+        </div>
+        <div class="toolbar">
+          <input type="text" id="catSearch" placeholder="Search shade or product… e.g. balayage, 613, tape" style="max-width:340px" aria-label="Search catalog" />
+          <span class="hint" id="catInfo"></span>
+        </div>
+        <div class="filters" id="catFilters" role="group" aria-label="Filter by product type"></div>
+        <div class="cards" id="catGrid"></div>
+      </section>
+
+      <!-- ============ BRAND & PUBLISH ============ -->
+      <section id="sec-brand" role="tabpanel" aria-labelledby="tab-brand" hidden>
+        <div class="cols">
+          <form class="panel" id="brandForm">
+            <h2>Brand profile</h2>
+            <p class="sub">These facts are woven into every primary text and headline the tool generates.</p>
+            <div style="display:grid;gap:12px">
+              <div>
+                <label class="f" for="bOffer">Current offer</label>
+                <input type="text" id="bOffer" value="Black Friday — 50% off Best Sellers" />
+              </div>
+              <div>
+                <label class="f" for="bUsp1">Proof point 1</label>
+                <input type="text" id="bUsp1" value="100% Vietnamese Remy Human Hair — cuticle-aligned, no tangling, no shedding" />
+              </div>
+              <div>
+                <label class="f" for="bUsp2">Proof point 2</label>
+                <input type="text" id="bUsp2" value="Direct from our own factory in Vietnam — no middleman markup" />
+              </div>
+              <div>
+                <label class="f" for="bTrust">Trust line</label>
+                <input type="text" id="bTrust" value="30-day exchange & return · Secure payment" />
+              </div>
+              <div>
+                <label class="f" for="bCta">Call to action button</label>
+                <select id="bCta">
+                  <option>Shop Now</option>
+                  <option>Learn More</option>
+                  <option>Get Offer</option>
+                  <option>Order Now</option>
+                </select>
+              </div>
+            </div>
+            <div class="toolbar" style="margin:14px 0 0">
+              <button class="btn" type="submit">Apply to copy generator</button>
+              <span class="hint">Regenerate a group's copy to use the updated profile.</span>
+            </div>
+          </form>
+
+          <div class="panel">
+            <h2>Publish on GitHub Pages</h2>
+            <p class="sub">This tool is a single self-contained <b>index.html</b> — no server, no build step. That is exactly what GitHub Pages serves.</p>
+            <ol class="steps-list">
+              <li>Download the file with the button below.</li>
+              <li>Create a new <b>public</b> repository on GitHub, e.g. <b>video-ads-analyzer</b>.</li>
+              <li>Upload <b>index.html</b> to the root of the repository and commit.</li>
+              <li>In the repo: <b>Settings → Pages → Deploy from a branch → main / (root)</b>, then Save.</li>
+              <li>After about a minute the tool is live at <b>https://&lt;your-username&gt;.github.io/video-ads-analyzer/</b></li>
+            </ol>
+            <div class="toolbar" style="margin-top:14px">
+              <button class="btn gold" id="btnDownloadHtml" type="button">Download index.html</button>
+              <button class="btn ghost" id="btnCopyReadme" type="button">Copy README.md</button>
+            </div>
+            <label class="f" for="readmeBox">README.md for the repo</label>
+            <div class="codebox" id="readmeBox"># Video Ads Analyzer — Macsara Hair
+
+A single-file web tool for planning Meta (Facebook / Instagram) video ads in the 3:2:2 Flexible Ad format.
+
+## What it does
+- Add ad videos by link (YouTube, TikTok, Drive) or file upload
+- Scans each clip and detects the hair product shown — type, shade, texture
+- Maps the detected product to the shop.macsarahair.com catalog snapshot built into the file (name, real price, product link)
+- Scores every video: hook, clarity, trust, closing power + suggested Ring 1–5
+- Groups videos into trios (3 creatives per group)
+- Generates 2 primary texts + 2 headlines per group, 100% in English, using the mapped product's real price
+
+## Run it
+Open `index.html` in any browser, or enable GitHub Pages:
+Settings → Pages → Deploy from a branch → main / (root).
+
+No build step, no server, no dependencies. Catalog snapshot: see the Shop Catalog tab inside the tool.</div>
+          </div>
+        </div>
+      </section>
+
+      <footer>
+        Catalog source: <a href="https://shop.macsarahair.com" target="_blank" rel="noopener">shop.macsarahair.com</a> · Analysis runs locally in your browser from the details you enter for each clip — the fuller the transcript, the sharper the scan, scores and copy.
+      </footer>
+    </div>
+
+    <div class="toast" id="toast" role="status"></div>
+
+    <script>
+    "use strict";
+    /* ===== Catalog snapshot from shop.macsarahair.com (synced at build) ===== */
+    var CATALOG = [{"name": "Natural Black (1B) Butterfly Weft", "shade": "Natural Black (1B)", "type": "Butterfly Weft", "price": 154.99, "was": 278.98, "url": "https://shop.macsarahair.com/products/natural-black-1b-butterfly-weft-hair-extensions-100g-150g"}, {"name": "Dark Brown (2) Butterfly Weft", "shade": "Dark Brown (2)", "type": "Butterfly Weft", "price": 168.56, "was": 303.41, "url": "https://shop.macsarahair.com/products/dark-brown-2-butterfly-weft-hair-extensions-100g-150g"}, {"name": "Honey Blonde Balayage (1A/1A+4Q) Butterfly Weft", "shade": "Honey Blonde Balayage (1A/1A+4Q)", "type": "Butterfly Weft", "price": 242.81, "was": 485.62, "url": "https://shop.macsarahair.com/products/honey-blonde-balayage-1a-1a-4q-butterfly-weft-hair-extensions-100g-150g"}, {"name": "Ash Platinum Highlights (9C+60C) Butterfly Weft", "shade": "Ash Platinum Highlights (9C+60C)", "type": "Butterfly Weft", "price": 261.28, "was": 496.43, "url": "https://shop.macsarahair.com/products/ash-platinum-highlights-9c-60c-butterfly-weft-hair-extensions-100g-150g"}, {"name": "Jet Black (1) Classic Clip-In", "shade": "Jet Black (1)", "type": "Classic Clip-In", "price": 92.99, "was": 185.98, "url": "https://shop.macsarahair.com/products/jet-black-1-classic-clip-in-hair-extensions-120g-140g"}, {"name": "Chocolate Brown (2Q) Classic Clip-In", "shade": "Chocolate Brown (2Q)", "type": "Classic Clip-In", "price": 106.58, "was": 213.16, "url": "https://shop.macsarahair.com/products/chocolate-brown-2q-classic-clip-in-hair-extensions-120g-140g"}, {"name": "Light Brown Highlights (4+27) Classic Clip-In", "shade": "Light Brown Highlights (4+27)", "type": "Classic Clip-In", "price": 113.59, "was": null, "url": "https://shop.macsarahair.com/products/light-brown-highlights-4-27-classic-clip-in-hair-extensions-120g-140g"}, {"name": "Natural Black (1B) Classic Clip-In", "shade": "Natural Black (1B)", "type": "Classic Clip-In", "price": 115.32, "was": 230.64, "url": "https://shop.macsarahair.com/products/natural-black-1b-classic-clip-in-hair-extensions-120g-140g"}, {"name": "Dark Brown Balayage (2/2+6) Classic Clip-In", "shade": "Dark Brown Balayage (2/2+6)", "type": "Classic Clip-In", "price": 127.26, "was": 254.52, "url": "https://shop.macsarahair.com/products/dark-brown-balayage-2-2-6-classic-clip-in-hair-extensions-120g-140g"}, {"name": "Golden Blonde Highlights (60C+6.2) Classic Clip-In", "shade": "Golden Blonde Highlights (60C+6.2)", "type": "Classic Clip-In", "price": 142.21, "was": 284.42, "url": "https://shop.macsarahair.com/products/golden-blonde-highlights-60c-6-2-classic-clip-in-hair-extensions-120g-140g"}, {"name": "Brown Platinum Highlight (4Q+60C) Classic Clip-In", "shade": "Brown Platinum Highlight (4Q+60C)", "type": "Classic Clip-In", "price": 142.21, "was": 284.42, "url": "https://shop.macsarahair.com/products/brown-platinum-highlight-4q-60c-classic-clip-in-hair-extensions-120g-140g"}, {"name": "Dark Brown (2) Classic Clip-In", "shade": "Dark Brown (2)", "type": "Classic Clip-In", "price": 183.65, "was": 312.21, "url": "https://shop.macsarahair.com/products/dark-brown-2-classic-clip-in-hair-extensions-120g-140g"}, {"name": "Bleach Blonde (613) Classic Clip-In", "shade": "Bleach Blonde (613)", "type": "Classic Clip-In", "price": 255.72, "was": 511.44, "url": "https://shop.macsarahair.com/products/bleach-blonde-613-classic-clip-in-hair-extensions-120g-140g"}, {"name": "Ash Light Blonde (9C) Classic Clip-In", "shade": "Ash Light Blonde (9C)", "type": "Classic Clip-In", "price": 255.72, "was": 511.44, "url": "https://shop.macsarahair.com/products/ash-light-blonde-9c-classic-clip-in-hair-extensions-120g-140g"}, {"name": "Caramel Blonde Balayage (1A/1A+3Q+9C) Classic Clip-In", "shade": "Caramel Blonde Balayage (1A/1A+3Q+9C)", "type": "Classic Clip-In", "price": 262.38, "was": 472.28, "url": "https://shop.macsarahair.com/products/caramel-blonde-balayage-1a-1a-3q-9c-classic-clip-in-hair-extensions-120g-140g"}, {"name": "Honey Blonde Balayage (1A/1A+4Q) Classic Clip-In", "shade": "Honey Blonde Balayage (1A/1A+4Q)", "type": "Classic Clip-In", "price": 262.38, "was": 524.76, "url": "https://shop.macsarahair.com/products/honey-blonde-balayage-1a-1a-4q-classic-clip-in-hair-extensions-120g-140g"}, {"name": "Ash Platinum Highlights (9C+60C) Classic Clip-In", "shade": "Ash Platinum Highlights (9C+60C)", "type": "Classic Clip-In", "price": 286.48, "was": 572.96, "url": "https://shop.macsarahair.com/products/ash-platinum-highlights-9c-60c-classic-clip-in-hair-extensions-120g-140g"}, {"name": "Natural Blonde Balayage (6.2/6C+60C) Classic Clip-In", "shade": "Natural Blonde Balayage (6.2/6C+60C)", "type": "Classic Clip-In", "price": 293.14, "was": 498.34, "url": "https://shop.macsarahair.com/products/natural-blonde-balayage-6-2-6c-60c-classic-clip-in-hair-extensions-120g-140g"}, {"name": "Caramel Blonde Balayage (1A/1A+3Q+9C) Classic Clip-In", "shade": "Caramel Blonde Balayage (1A/1A+3Q+9C)", "type": "Classic Clip-In", "price": 327.98, "was": 655.96, "url": "https://shop.macsarahair.com/products/caramel-blonde-balayage-1a-1a-3q-9c-classic-clip-in-hair-extensions-150g-170g"}, {"name": "Honey Blonde Balayage (1A/1A+4Q) Classic Clip-In", "shade": "Honey Blonde Balayage (1A/1A+4Q)", "type": "Classic Clip-In", "price": 327.98, "was": 655.96, "url": "https://shop.macsarahair.com/products/honey-blonde-balayage-1a-1a-4q-classic-clip-in-hair-extensions-150g-170g"}, {"name": "Natural Blonde Balayage (6.2/6C+60C) Classic Clip-In", "shade": "Natural Blonde Balayage (6.2/6C+60C)", "type": "Classic Clip-In", "price": 366.43, "was": 659.57, "url": "https://shop.macsarahair.com/products/natural-blonde-balayage-6-2-6c-60c-classic-clip-in-hair-extensions-150g-170g"}, {"name": "Natural Black (1B) Flat Tip", "shade": "Natural Black (1B)", "type": "Flat Tip", "price": 70.73, "was": 141.46, "url": "https://shop.macsarahair.com/products/natural-color-1b-flat-tip-hair-extensions-50g-100g"}, {"name": "Dark Brown (2) Flat Tip", "shade": "Dark Brown (2)", "type": "Flat Tip", "price": 77.42, "was": 154.84, "url": "https://shop.macsarahair.com/products/dark-brown-2-flat-tip-hair-extensions-50g-100g"}, {"name": "Natural Blonde Balayage (6.2/6C+60C) Flat Tip", "shade": "Natural Blonde Balayage (6.2/6C+60C)", "type": "Flat Tip", "price": 78.87, "was": 157.74, "url": "https://shop.macsarahair.com/products/natural-blonde-balayage-6-2-6c-60c-flat-tip-hair-extensions-50g-100g"}, {"name": "Bleach Blonde (613) Flat Tip", "shade": "Bleach Blonde (613)", "type": "Flat Tip", "price": 106.97, "was": 213.94, "url": "https://shop.macsarahair.com/products/bleach-blonde-613-flat-tip-hair-extensions-50g-100g"}, {"name": "Ash Light Blonde (9C) Flat Tip", "shade": "Ash Light Blonde (9C)", "type": "Flat Tip", "price": 106.97, "was": 213.94, "url": "https://shop.macsarahair.com/products/ash-light-blonde-9c-flat-tip-hair-extensions-50g-100g"}, {"name": "Ash Platinum Highlights (9C+60C) Flat Tip", "shade": "Ash Platinum Highlights (9C+60C)", "type": "Flat Tip", "price": 118.44, "was": 236.88, "url": "https://shop.macsarahair.com/products/ash-platinum-highlights-9c-60c-flat-tip-hair-extensions-50g-100g"}, {"name": "Jet Black (1) Genius Weft", "shade": "Jet Black (1)", "type": "Genius Weft", "price": 53.85, "was": 107.7, "url": "https://shop.macsarahair.com/products/jet-black-1-genius-weft-hair-extensions-50g-100g"}, {"name": "Natural Black (1B) Genius Weft", "shade": "Natural Black (1B)", "type": "Genius Weft", "price": 53.85, "was": 107.7, "url": "https://shop.macsarahair.com/products/natural-color-1b-genius-weft-hair-extensions-50g-100g"}, {"name": "Chocolate Brown (2Q) Genius Weft", "shade": "Chocolate Brown (2Q)", "type": "Genius Weft", "price": 61.39, "was": 122.78, "url": "https://shop.macsarahair.com/products/chocolate-brown-2q-genius-weft-hair-extensions-50g-100g"}, {"name": "Dark Brown (2) Genius Weft", "shade": "Dark Brown (2)", "type": "Genius Weft", "price": 61.39, "was": 122.78, "url": "https://shop.macsarahair.com/products/dark-brown-2-genius-weft-hair-extensions-50g-100g"}, {"name": "Dark Brown Balayage (2/2+6) Genius Weft", "shade": "Dark Brown Balayage (2/2+6)", "type": "Genius Weft", "price": 71.29, "was": 142.58, "url": "https://shop.macsarahair.com/products/dark-brown-balayage-2-2-6-genius-weft-hair-extensions-50g-100g"}, {"name": "Caramel Blonde Balayage (1A/1A+3Q+9C) Genius Weft", "shade": "Caramel Blonde Balayage (1A/1A+3Q+9C)", "type": "Genius Weft", "price": 71.29, "was": 142.58, "url": "https://shop.macsarahair.com/products/caramel-blonde-balayage-1a-1a-3q-9c-genius-weft-hair-extensions-50g-100g"}, {"name": "Honey Blonde Balayage (1A/1A+4Q) Genius Weft", "shade": "Honey Blonde Balayage (1A/1A+4Q)", "type": "Genius Weft", "price": 71.29, "was": 121.19, "url": "https://shop.macsarahair.com/products/honey-blonde-balayage-1a-1a-4q-genius-weft-hair-extensions-50g-100g"}, {"name": "Golden Blonde Highlights (60C+6.2) Genius Weft", "shade": "Golden Blonde Highlights (60C+6.2)", "type": "Genius Weft", "price": 80.13, "was": 160.26, "url": "https://shop.macsarahair.com/products/golden-blonde-highlights-60c-6-2-genius-weft-hair-extensions-50g-100g"}, {"name": "Brown Platinum Highlights (4Q+60C) Genius Weft", "shade": "Brown Platinum Highlights (4Q+60C)", "type": "Genius Weft", "price": 80.13, "was": 160.26, "url": "https://shop.macsarahair.com/products/brown-platinum-highlights-4q-60c-genius-weft-hair-extensions-50g-100g"}, {"name": "Ash Platinum Highlights (9C+60C) Genius Weft", "shade": "Ash Platinum Highlights (9C+60C)", "type": "Genius Weft", "price": 80.13, "was": 160.26, "url": "https://shop.macsarahair.com/products/ash-platinum-highlights-9c-60c-genius-weft-hair-extensions-50g-100g"}, {"name": "Natural Blonde Balayage (6.2/6C+60C) Genius Weft", "shade": "Natural Blonde Balayage (6.2/6C+60C)", "type": "Genius Weft", "price": 82.91, "was": 165.82, "url": "https://shop.macsarahair.com/products/natural-blonde-balayage-6-2-6c-60c-genius-weft-hair-extensions-50g-100g"}, {"name": "Light Blonde Highlights (4+27) Genius Weft", "shade": "Light Blonde Highlights (4+27)", "type": "Genius Weft", "price": 99.6, "was": 199.2, "url": "https://shop.macsarahair.com/products/light-blonde-highlights-4-27-genius-weft-hair-extensions-50g-100g"}, {"name": "Ash Light Blonde (9C) Genius Weft", "shade": "Ash Light Blonde (9C)", "type": "Genius Weft", "price": 116.78, "was": 233.56, "url": "https://shop.macsarahair.com/products/ash-light-blonde-genius-weft-hair-extensions-50g-100g"}, {"name": "Bleach Blonde (613) Genius Weft", "shade": "Bleach Blonde (613)", "type": "Genius Weft", "price": 116.78, "was": 233.56, "url": "https://shop.macsarahair.com/products/bleach-blonde-613-genius-weft-hair-extensions-50g-100g"}, {"name": "Ash Platinum Highlights (9C+60C) Halo", "shade": "Ash Platinum Highlights (9C+60C)", "type": "Halo", "price": 69.42, "was": 138.84, "url": "https://shop.macsarahair.com/products/ash-platinum-highlights-9c-60c-halo-hair-extensions-100g-120g"}, {"name": "Natural Black (1B) Halo", "shade": "Natural Black (1B)", "type": "Halo", "price": 153.2, "was": 306.4, "url": "https://shop.macsarahair.com/products/natural-black-1b-halo-hair-extensions-100g-120g"}, {"name": "Dark Brown (2) Halo", "shade": "Dark Brown (2)", "type": "Halo", "price": 168.34, "was": 336.68, "url": "https://shop.macsarahair.com/products/dark-brown-2-halo-hair-extensions-100g-120g"}, {"name": "Honey Blonde Balayage (1A/1A+4Q) Halo", "shade": "Honey Blonde Balayage (1A/1A+4Q)", "type": "Halo", "price": 202.88, "was": 405.76, "url": "https://shop.macsarahair.com/products/honey-blonde-balayage-1a-1a-4q-halo-hair-extensions-75g-120g"}, {"name": "Caramel Blonde Balayage (1A/1A+3Q+9C) Halo", "shade": "Caramel Blonde Balayage (1A/1A+3Q+9C)", "type": "Halo", "price": 240.52, "was": 481.04, "url": "https://shop.macsarahair.com/products/caramel-blonde-balayage-1a-1a-3q-9c-halo-hair-extensions-75g-120g"}, {"name": "Natural Black (1B) I-Tip", "shade": "Natural Black (1B)", "type": "I-Tip", "price": 70.73, "was": 141.46, "url": "https://shop.macsarahair.com/products/natural-black-1b-i-tip-hair-extensions-50g-100g"}, {"name": "Ash Platinum Highlights (9C+60C) I-Tip", "shade": "Ash Platinum Highlights (9C+60C)", "type": "I-Tip", "price": 118.44, "was": 213.19, "url": "https://shop.macsarahair.com/products/ash-platinum-highlights-9c-60c-i-tip-hair-extensions-50g-100g"}, {"name": "Natural Black (1B) Seamless Clip-In (100g-130g-160g)", "shade": "Natural Black (1B)", "type": "Seamless Clip-In", "price": 144.46, "was": 274.47, "url": "https://shop.macsarahair.com/products/natural-black-1b-seamless-clip-in-100g-130g-160g"}, {"name": "Ash Platinum Highlights (9C+60C) Seamless Clip-In (100g-130g-160g)", "shade": "Ash Platinum Highlights (9C+60C)", "type": "Seamless Clip-In", "price": 243.14, "was": 486.28, "url": "https://shop.macsarahair.com/products/ash-platinum-highlights-9c-60c-seamless-clip-in-100g-130g-160g"}, {"name": "Natural Black (1B) Tape-In", "shade": "Natural Black (1B)", "type": "Tape-In", "price": 51.11, "was": 102.22, "url": "https://shop.macsarahair.com/products/natural-black-1b-tape-in-hair-extensions-50g-100g"}, {"name": "Honey Blonde Balayage (1A/1A+4Q) Tape-In", "shade": "Honey Blonde Balayage (1A/1A+4Q)", "type": "Tape-In", "price": 55.68, "was": 111.36, "url": "https://shop.macsarahair.com/products/honey-blonde-balayage-1a-1a-4q-tape-in-hair-extensions-50g-100g"}, {"name": "Dark Brown (2) Tape-In", "shade": "Dark Brown (2)", "type": "Tape-In", "price": 57.85, "was": 115.7, "url": "https://shop.macsarahair.com/products/dark-brown-2-tape-in-hair-extensions-50g-100g"}, {"name": "Chocolate Brown (2Q) Tape-In", "shade": "Chocolate Brown (2Q)", "type": "Tape-In", "price": 62.6, "was": 125.21, "url": "https://shop.macsarahair.com/products/chocolate-brown-2q-tape-in-hair-extensions-50g-100g"}, {"name": "Dark Brown Balayage (2/2+6) Tape-In", "shade": "Dark Brown Balayage (2/2+6)", "type": "Tape-In", "price": 70.13, "was": 140.26, "url": "https://shop.macsarahair.com/products/dark-brown-balayage-2-2-6-tape-in-hair-extensions-50g-100g"}, {"name": "Caramel Blonde Balayage (1A/1A+3Q+9C) Tape-In", "shade": "Caramel Blonde Balayage (1A/1A+3Q+9C)", "type": "Tape-In", "price": 70.13, "was": 140.26, "url": "https://shop.macsarahair.com/products/caramel-blonde-balayage-1a-1a-3q-9c-tape-in-hair-extensions-50g-100g"}, {"name": "Golden Blonde Highlights (60C+6.2) Tape-In", "shade": "Golden Blonde Highlights (60C+6.2)", "type": "Tape-In", "price": 77.5, "was": 155.0, "url": "https://shop.macsarahair.com/products/golden-blonde-highlights-60c-6-2-tape-in-hair-extensions-50g-100g"}, {"name": "Ash Platinum Highlights (9C+60C) Tape-In", "shade": "Ash Platinum Highlights (9C+60C)", "type": "Tape-In", "price": 77.5, "was": 155.0, "url": "https://shop.macsarahair.com/products/ash-platinum-highlights-9c-60c-tape-in-hair-extensions-50g-100g"}, {"name": "Natural Blonde Balayage (6.2/6C+60C) Tape-In", "shade": "Natural Blonde Balayage (6.2/6C+60C)", "type": "Tape-In", "price": 80.28, "was": 136.48, "url": "https://shop.macsarahair.com/products/natural-blonde-balayage-6-2-6c-60c-tape-in-hair-extensions-50g-100g"}, {"name": "Bleach Blonde (613) Tape-In", "shade": "Bleach Blonde (613)", "type": "Tape-In", "price": 109.91, "was": 219.82, "url": "https://shop.macsarahair.com/products/bleach-blonde-613-tape-in-hair-extensions-50g-100g"}, {"name": "Ash Light Blonde (9C) Tape-In", "shade": "Ash Light Blonde (9C)", "type": "Tape-In", "price": 109.91, "was": 219.82, "url": "https://shop.macsarahair.com/products/ash-light-blonde-9c-tape-in-hair-extensions-50g-100g"}];
+    var SYNC_DATE = "November 26, 2026";
+
+    /* ===== State (in-memory for this session) ===== */
+    var videos = [];   // {id,title,url,fileUrl,thumb,format,ring,angle,hook,transcript,notes,duration,scan,analysis,selected}
+    var groups = [];   // {id,videoIds,ring,productIdx,pt1,pt2,h1,h2}
+    var uid = 1;
+    var brand = { offer:"Black Friday — 50% off Best Sellers", usp1:"", usp2:"", trust:"", cta:"Shop Now" };
+
+    function $(id){ return document.getElementById(id); }
+    function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
+    function money(n){ return "$" + Number(n).toFixed(2); }
+    function toast(msg){ var t=$("toast"); t.textContent=msg; t.classList.add("show"); setTimeout(function(){ t.classList.remove("show"); }, 2600); }
+
+    /* ===== Tabs ===== */
+    var tabBtns = document.querySelectorAll("nav.tabs button");
+    tabBtns.forEach(function(b){
+      b.addEventListener("click", function(){
+        tabBtns.forEach(function(x){ x.setAttribute("aria-selected","false"); });
+        b.setAttribute("aria-selected","true");
+        ["videos","groups","catalog","brand"].forEach(function(k){ $("sec-"+k).hidden = (k !== b.dataset.tab); });
+      });
+    });
+    function gotoTab(k){ document.querySelector('nav.tabs button[data-tab="'+k+'"]').click(); }
+
+    /* ===== Product scan: detect type / shade / texture in the clip ===== */
+    var TYPE_KEYS = [
+      { type:"Butterfly Weft", keys:["butterfly weft","butterfly"] },
+      { type:"Genius Weft", keys:["genius weft","genius"] },
+      { type:"Seamless Clip-In", keys:["seamless clip","seamless"] },
+      { type:"Classic Clip-In", keys:["classic clip","clip-in","clip in","clip ins","clip-ins"] },
+      { type:"Tape-In", keys:["tape-in","tape in","tape ins","tape-ins","tapein","tape tabs"] },
+      { type:"Flat Tip", keys:["flat tip","flat-tip","keratin tip"] },
+      { type:"I-Tip", keys:["i-tip","i tip","itip"] },
+      { type:"Halo", keys:["halo"] },
+      { type:"Genius Weft", keys:["weft"] }
+    ];
+    var SHADE_KEYS = [
+      { shade:"Ash Platinum Highlights (9C+60C)", keys:["ash platinum","9c+60c","9c 60c","platinum highlights"] },
+      { shade:"Brown Platinum Highlights (4Q+60C)", keys:["brown platinum","4q+60c"] },
+      { shade:"Light Blonde Highlights (4+27)", keys:["light blonde highlights","4+27"] },
+      { shade:"Golden Blonde Highlights (60C+6.2)", keys:["golden blonde","60c+6.2","golden highlights"] },
+      { shade:"Natural Blonde Balayage (6.2/6C+60C)", keys:["natural blonde balayage","6.2/6c+60c"] },
+      { shade:"Caramel Blonde Balayage (1A/1A+3Q+9C)", keys:["caramel balayage","caramel blonde balayage","1a+3q+9c"] },
+      { shade:"Honey Blonde Balayage (1A/1A+4Q)", keys:["honey blonde","honey balayage","1a+4q"] },
+      { shade:"Dark Brown Balayage (2/2+6)", keys:["dark brown balayage","2/2+6"] },
+      { shade:"Ash Light Blonde (9C)", keys:["ash light blonde","ash blonde","9c"] },
+      { shade:"Bleach Blonde (613)", keys:["bleach blonde","613","platinum blonde"] },
+      { shade:"Chocolate Brown (2Q)", keys:["chocolate brown","chocolate","2q"] },
+      { shade:"Jet Black (1)", keys:["jet black"] },
+      { shade:"Natural Black (1B)", keys:["natural black","1b","natural color"] },
+      { shade:"Dark Brown (2)", keys:["dark brown"] }
+    ];
+    function scanProduct(v){
+      var text = (v.title+" "+v.hook+" "+v.transcript+" "+v.notes+" "+(v.fileName||"")).toLowerCase();
+      var typeHit = null, shadeHit = null, texHit = null;
+      for (var i=0;i<TYPE_KEYS.length;i++){ for (var j=0;j<TYPE_KEYS[i].keys.length;j++){ if (text.indexOf(TYPE_KEYS[i].keys[j])>-1){ typeHit = TYPE_KEYS[i].type; break; } } if (typeHit) break; }
+      for (var a=0;a<SHADE_KEYS.length;a++){ for (var b=0;b<SHADE_KEYS[a].keys.length;b++){ if (text.indexOf(SHADE_KEYS[a].keys[b])>-1){ shadeHit = SHADE_KEYS[a].shade; break; } } if (shadeHit) break; }
+      if (/curl|wave|wavy|body wave|deep wave/.test(text)) texHit = "wavy / curly texture";
+      else if (/straight|silky straight/.test(text)) texHit = "straight texture";
+      else if (/yaki|kinky/.test(text)) texHit = "yaki / kinky texture";
+      var lenHit = null, lm = text.match(/(\d{2})\s*(inch|in\b|"|inches)/);
+      if (lm) lenHit = lm[1] + '"';
+      var best = -1, bestScore = -1;
+      CATALOG.forEach(function(p, idx){
+        var s = 0;
+        if (typeHit && p.type === typeHit) s += 60;
+        if (shadeHit && p.shade === shadeHit) s += 40;
+        if (s > bestScore){ bestScore = s; best = idx; }
+      });
+      var confidence = 0;
+      if (best > -1){ confidence = Math.min(98, 30 + bestScore + (texHit?4:0) + (lenHit?4:0)); if (!typeHit && !shadeHit) confidence = 25; }
+      return { type:typeHit, shade:shadeHit, texture:texHit, length:lenHit, productIdx: best, confidence: confidence };
+    }
+
+    /* ===== Analysis: deterministic scoring from the entered signals ===== */
+    function hasAny(text, words){ for (var i=0;i<words.length;i++){ if (text.indexOf(words[i])>-1) return true; } return false; }
+    function analyze(v){
+      var hook = (v.hook||"").trim(), tr = (v.transcript||"").toLowerCase(), all = (v.title+" "+hook+" "+v.transcript+" "+v.notes).toLowerCase();
+      var hookScore = 30;
+      if (hook.length >= 12) hookScore += 25;
+      if (hook.length >= 30) hookScore += 10;
+      if (/\d/.test(hook)) hookScore += 12;
+      if (/\?/.test(hook)) hookScore += 8;
+      if (hasAny(hook.toLowerCase(), ["stop","watch","secret","mistake","before","thin","never","why","how","pov","wait"])) hookScore += 15;
+      var clarity = 35;
+      if (tr.length > 60) clarity += 20;
+      if (tr.length > 180) clarity += 15;
+      if (v.scan && v.scan.type) clarity += 18;
+      if (v.scan && v.scan.shade) clarity += 12;
+      var trust = 30;
+      if (hasAny(all, ["remy","factory","manufacturer","vietnamese"])) trust += 25;
+      if (hasAny(all, ["review","testimonial","customer","salon","stylist","wedding","real"])) trust += 20;
+      if (hasAny(all, ["30-day","30 day","exchange","return","guarantee","warranty"])) trust += 15;
+      if (hasAny(all, ["no tangl","no shedd","cuticle"])) trust += 10;
+      var close = 30;
+      if (hasAny(all, ["% off","sale","black friday","discount","from $","price","offer"])) close += 25;
+      if (hasAny(all, ["shop now","order","buy","link","color match","find my color","shade"])) close += 20;
+      if (hasAny(all, ["sell out","selling out","limited","last chance","ends","fast"])) close += 12;
+      if (v.scan && v.scan.productIdx > -1) close += 8;
+      function cl(n){ return Math.max(5, Math.min(98, Math.round(n))); }
+      var s = { hook: cl(hookScore), clarity: cl(clarity), trust: cl(trust), close: cl(close) };
+      s.overall = Math.round((s.hook + s.clarity + s.trust + s.close) / 4);
+      var strengths = [], weak = [];
+      if (s.hook >= 70) strengths.push("Strong, specific hook in the first 3 seconds"); else weak.push("Hook is vague — lead with a result, a number, or a question (e.g. “Thin hair? This took 10 minutes.”)");
+      if (s.clarity >= 70) strengths.push("Product and shade are clearly identifiable in the clip"); else weak.push("Product is hard to identify — name the type and shade on screen or in the transcript so the scan can map it");
+      if (s.trust >= 70) strengths.push("Real proof signals: Remy quality, factory origin, or social proof"); else weak.push("Little proof — add a Remy / factory line, a review quote, or a stylist endorsement");
+      if (s.close >= 70) strengths.push("Clear path to purchase: offer, price or color-match cue"); else weak.push("Weak close — show the offer price or a “Find My Color” moment before the end card");
+      var ring = v.ring && v.ring > 0 ? v.ring : 0;
+      if (!ring){
+        if (v.angle === "Offer / Sale") ring = 4;
+        else if (v.angle === "Color Match / Shade Guide") ring = 5;
+        else if (v.angle === "Testimonial / Review" || v.angle === "Wedding / Occasion") ring = 3;
+        else if (v.angle === "Stylist / Install Demo" || v.angle === "Factory Tour" || v.angle === "Hair Quality Close-Up") ring = 2;
+        else ring = 1;
+      }
+      return { scores: s, strengths: strengths, weaknesses: weak, ring: ring };
+    }
+    var RING_NAMES = { 1:"Ring 1 · First Hello", 2:"Ring 2 · Second Hello", 3:"Ring 3 · Third Hello", 4:"Ring 4 · First Close", 5:"Ring 5 · Second Close" };
+
+    /* ===== Thumbnails / sources ===== */
+    function ytId(url){ var m = String(url||"").match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/)([\w-]{6,})/); return m ? m[1] : null; }
+    function thumbHTML(v){
+      if (v.thumb) return '<img src="'+esc(v.thumb)+'" alt="Thumbnail of '+esc(v.title)+'" loading="lazy" />';
+      var id = ytId(v.url);
+      if (id) return '<img src="https://i.ytimg.com/vi/'+id+'/hqdefault.jpg" alt="Thumbnail of '+esc(v.title)+'" loading="lazy" />';
+      if (v.fileUrl) return '<video src="'+v.fileUrl+'" muted playsinline preload="metadata"></video>';
+      return '<div class="noimg">No preview available for this source — open the link to view the clip.</div>';
+    }
+    function sourceLabel(v){
+      if (v.fileName) return "Uploaded file: " + esc(v.fileName);
+      if (!v.url) return "No link";
+      var host = "Link"; if (/youtube|youtu\.be/.test(v.url)) host = "YouTube"; else if (/tiktok/.test(v.url)) host = "TikTok"; else if (/drive\.google/.test(v.url)) host = "Google Drive";
+      return host + ': <a href="'+esc(v.url)+'" target="_blank" rel="noopener">'+esc(v.url)+'</a>';
+    }
+
+    /* ===== Render videos ===== */
+    function scoreBar(name, val){
+      return '<div class="score"><div class="n"><span>'+name+'</span><span>'+val+'/100</span></div><div class="bar"><i style="width:'+val+'%"></i></div></div>';
+    }
+    function renderVideos(){
+      $("countVideos").textContent = videos.length;
+      $("videoEmpty").style.display = videos.length ? "none" : "block";
+      var sel = videos.filter(function(v){ return v.selected; }).length;
+      $("selInfo").textContent = sel + " of 3 selected for a manual group";
+      $("btnManualGroup").disabled = sel !== 3;
+      $("videoCards").innerHTML = videos.map(function(v){
+        var p = v.scan && v.scan.productIdx > -1 ? CATALOG[v.scan.productIdx] : null;
+        var det = [];
+        if (v.scan && v.scan.type) det.push(v.scan.type);
+        if (v.scan && v.scan.shade) det.push(v.scan.shade);
+        if (v.scan && v.scan.texture) det.push(v.scan.texture);
+        if (v.scan && v.scan.length) det.push(v.scan.length);
+        var mapBox = '<div class="mapbox"><div class="lbl">Product scan — mapped to shop</div>';
+        if (p){
+          var off = p.was ? Math.round((1 - p.price / p.was) * 100) : 0;
+          mapBox += '<div class="pname">'+esc(p.name)+' Hair Extensions</div>'
+            + '<div class="price">From <b>'+money(p.price)+'</b>' + (p.was ? ' <s>'+money(p.was)+'</s><span class="off">−'+off+'%</span>' : '') + '</div>'
+            + '<div><a href="'+esc(p.url)+'" target="_blank" rel="noopener">View on shop.macsarahair.com</a></div>'
+            + '<div class="conf">Detected in clip: '+(det.length ? esc(det.join(" · ")) : "partial match")+' · Match confidence '+v.scan.confidence+'%</div>';
+        } else {
+          mapBox += '<div class="pname">No confident match yet</div><div class="conf">Add the product type and shade to the title or transcript, or pick the product manually below.</div>';
+        }
+        mapBox += '<select data-act="remap" data-id="'+v.id+'" aria-label="Mapped product for '+esc(v.title)+'"><option value="-1">— No product mapped —</option>'
+          + CATALOG.map(function(cp, i){ return '<option value="'+i+'"'+(v.scan && v.scan.productIdx===i ? ' selected' : '')+'>'+esc(cp.name)+' — from '+money(cp.price)+'</option>'; }).join("")
+          + '</select></div>';
+        var an = "";
+        if (v.analysis){
+          var sc = v.analysis.scores;
+          an = '<div class="overall"><span class="big">'+sc.overall+'</span><span><b>Overall score</b><br /><span class="tag ring">'+RING_NAMES[v.analysis.ring]+'</span></span></div>'
+            + '<div class="scores">'+scoreBar("Hook", sc.hook)+scoreBar("Clarity", sc.clarity)+scoreBar("Trust", sc.trust)+scoreBar("Closing power", sc.close)+'</div>'
+            + '<div class="sw"><span class="good">Strengths</span><ul>'+v.analysis.strengths.map(function(x){ return "<li>"+esc(x)+"</li>"; }).join("")+'</ul></div>'
+            + (v.analysis.weaknesses.length ? '<div class="sw"><span class="bad">Fix first</span><ul>'+v.analysis.weaknesses.map(function(x){ return "<li>"+esc(x)+"</li>"; }).join("")+'</ul></div>' : "");
+        } else {
+          an = '<p class="hint" style="margin:0">Not analyzed yet — hit “Analyze all videos” or Analyze on this card.</p>';
+        }
+        return '<article class="card'+(v.selected ? " picked" : "")+'" data-card="'+v.id+'">'
+          + '<div class="thumb">'+thumbHTML(v)+'<span class="fmt">'+esc(v.format)+'</span>'+(v.duration ? '<span class="dur">'+esc(v.duration)+'</span>' : "")+'</div>'
+          + '<div class="body"><h3>'+esc(v.title)+'</h3>'
+          + '<div class="meta"><span class="tag">'+esc(v.angle)+'</span>'+(v.ring ? '<span class="tag ring">'+RING_NAMES[v.ring]+'</span>' : '<span class="tag">Ring: auto</span>')+'</div>'
+          + '<div class="src">'+sourceLabel(v)+'</div>'
+          + (v.hook ? '<div class="hookline"><b>Hook</b>“'+esc(v.hook)+'”</div>' : "")
+          + mapBox + an
+          + '<div class="foot"><label class="pick"><input type="checkbox" data-act="pick" data-id="'+v.id+'"'+(v.selected ? " checked" : "")+' /> Group</label>'
+          + '<button class="btn ghost small" type="button" data-act="analyze" data-id="'+v.id+'">Analyze</button>'
+          + '<button class="btn ghost small" type="button" data-act="rescan" data-id="'+v.id+'">Re-scan product</button>'
+          + '<span class="spacer" style="flex:1"></span>'
+          + '<button class="btn ghost small" type="button" data-act="del" data-id="'+v.id+'">Delete</button></div>'
+          + '</div></article>';
+      }).join("");
+    }
+
+    /* ===== Copy generation (100% English, from mapped product + brand) ===== */
+    function groupProduct(g){
+      var counts = {};
+      g.videoIds.forEach(function(id){ var v = videos.find(function(x){ return x.id===id; }); if (v && v.scan && v.scan.productIdx>-1){ counts[v.scan.productIdx] = (counts[v.scan.productIdx]||0)+1; } });
+      var best = -1, n = 0;
+      Object.keys(counts).forEach(function(k){ if (counts[k] > n){ n = counts[k]; best = Number(k); } });
+      return best;
+    }
+    function genCopy(g){
+      var pi = groupProduct(g);
+      var p = pi > -1 ? CATALOG[pi] : null;
+      var vs = g.videoIds.map(function(id){ return videos.find(function(x){ return x.id===id; }); }).filter(Boolean);
+      var ring = g.ring || (vs[0] && vs[0].analysis ? vs[0].analysis.ring : 1);
+      var pname = p ? p.name : "Macsara Hair Extensions";
+      var priceLine = p ? "From " + money(p.price) + (p.was ? " (was " + money(p.was) + ")" : "") : "";
+      var hook = (vs.find(function(v){ return v.hook; }) || {}).hook || "This took 10 minutes.";
+      var pt1, pt2, h1, h2;
+      if (ring === 4){
+        pt1 = brand.offer + ".\n" + pname + " — now " + priceLine + ".\n" + brand.usp1 + ".\n" + brand.trust + ". Your shade sells out fast every sale — shop before it ends.";
+        pt2 = "Your dream hair, at half the price.\nThis is our biggest sale of the year on " + pname + ".\nStock up now, wear it for months.\n" + brand.trust + ".";
+        h1 = "Black Friday — 50% Off Best Sellers";
+        h2 = pname.split(" (")[0] + (p ? " From " + money(p.price) : "");
+      } else if (ring === 5){
+        pt1 = "Not sure about your shade?\nUse our Find My Color tool — match your perfect color in 30 seconds.\n" + pname + " blends seamlessly and looks like your own hair.\nIf it is not a perfect match, exchange it within 30 days.";
+        pt2 = "Worried it won't blend? That's exactly why we built Color Match.\nSend us a photo of your hair, or use the shade guide to find your fit.\n" + brand.usp1 + ".\nStill unsure? Our team will help you choose — zero risk with a 30-day exchange.";
+        h1 = "Find Your Perfect Shade in 30 Seconds";
+        h2 = "30-Day Exchange — Zero Risk";
+      } else if (ring === 3){
+        pt1 = "“I wore it all day — and it looked perfect in every photo.”\nReal customers. Real hair. Real compliments.\n" + pname + ": soft, silky, and natural from every angle.\nFind your perfect match today.";
+        pt2 = "Thousands of women in the US trust Macsara for length, volume, and confidence.\nNo stiff look. No fake shine. Just hair that moves like yours.\n" + pname + (p ? " — " + priceLine + "." : ".") + "\nRead the reviews, then see it for yourself.";
+        h1 = "Loved for Weddings & Every Day";
+        h2 = "Real Reviews. Real Transformations.";
+      } else if (ring === 2){
+        pt1 = "Not all human hair is the same.\n" + brand.usp1 + ".\n" + brand.usp2 + ".\nWatch how a stylist installs " + pname + " in minutes — clean, strong hold, seamless blend, even on fine hair.";
+        pt2 = "Your stylist will love working with this hair.\n" + pname + ", made for salons and for real life.\n" + brand.usp2 + " — factory-direct quality without the middleman price." + (p ? "\n" + priceLine + " during " + brand.offer.split("—")[0].trim() + "." : "");
+        h1 = "100% Vietnamese Remy Hair";
+        h2 = "Direct From Our Factory in Vietnam";
+      } else {
+        pt1 = hook + "\nNo salon appointment. No damage. Just full, natural-looking volume that blends with your real hair.\n" + pname + " — " + brand.usp1.split("—")[0].trim() + ", direct from our factory.\nShop now — " + brand.offer + (p ? ", " + priceLine + "." : ".");
+        pt2 = "I stopped hiding my thin hair in a ponytail.\n" + pname + " gave me the thickness I always wanted — and nobody can tell I'm wearing extensions.\nLightweight, comfortable, and reusable.\nTry it today, with a 30-day exchange.";
+        h1 = "Thin to Thick in 10 Minutes";
+        h2 = p ? "From " + money(p.price) + " — 50% Off Today" : "Factory-Direct Remy Hair";
+      }
+      return { pt1: pt1, pt2: pt2, h1: h1, h2: h2 };
+    }
+    function makeGroup(videoIds){
+      var vs = videoIds.map(function(id){ return videos.find(function(x){ return x.id===id; }); }).filter(Boolean);
+      var rings = vs.map(function(v){ return v.analysis ? v.analysis.ring : (v.ring||0); }).filter(function(r){ return r>0; });
+      var ring = rings.length ? rings.sort(function(a,b){ return rings.filter(function(x){return x===a;}).length - rings.filter(function(x){return x===b;}).length; }).pop() : 1;
+      var g = { id: uid++, videoIds: videoIds.slice(), ring: ring };
+      var c = genCopy(g); g.pt1 = c.pt1; g.pt2 = c.pt2; g.h1 = c.h1; g.h2 = c.h2;
+      groups.push(g);
+      return g;
+    }
+
+    /* ===== Render groups ===== */
+    function renderGroups(){
+      $("countGroups").textContent = groups.length;
+      $("groupEmpty").style.display = groups.length ? "none" : "block";
+      $("groupList").innerHTML = groups.map(function(g, gi){
+        var pi = groupProduct(g); var p = pi > -1 ? CATALOG[pi] : null;
+        var slots = g.videoIds.map(function(id){
+          var v = videos.find(function(x){ return x.id===id; });
+          if (!v) return "";
+          return '<div class="slot"><div class="t">'+thumbHTML(v)+'</div><div class="cap"><b>'+esc(v.title)+'</b>'+esc(v.angle)+' · '+esc(v.format)+'</div></div>';
+        }).join("");
+        return '<article class="group" data-group="'+g.id+'">'
+          + '<h3>Group '+(gi+1)+' — '+RING_NAMES[g.ring]+'</h3>'
+          + '<div class="meta" style="margin-top:6px"><span class="tag">3 creatives</span><span class="tag">2 primary texts</span><span class="tag">2 headlines</span><span class="tag">CTA: '+esc(brand.cta)+'</span>'
+          + (p ? '<span class="tag ring">'+esc(p.name)+' — from '+money(p.price)+'</span>' : '<span class="tag">No product mapped</span>') + '</div>'
+          + '<div class="trio">'+slots+'</div>'
+          + '<div class="copygrid">'
+          + '<div class="copybox"><label class="f" for="pt1-'+g.id+'">Primary Text 1</label><textarea id="pt1-'+g.id+'" data-gf="pt1">'+esc(g.pt1)+'</textarea></div>'
+          + '<div class="copybox"><label class="f" for="pt2-'+g.id+'">Primary Text 2</label><textarea id="pt2-'+g.id+'" data-gf="pt2">'+esc(g.pt2)+'</textarea></div>'
+          + '<div class="copybox"><label class="f" for="h1-'+g.id+'">Headline 1</label><textarea class="hl" id="h1-'+g.id+'" data-gf="h1">'+esc(g.h1)+'</textarea></div>'
+          + '<div class="copybox"><label class="f" for="h2-'+g.id+'">Headline 2</label><textarea class="hl" id="h2-'+g.id+'" data-gf="h2">'+esc(g.h2)+'</textarea></div>'
+          + '</div>'
+          + '<div class="toolbar" style="margin:14px 0 0">'
+          + '<button class="btn small" type="button" data-gact="copy" data-id="'+g.id+'">Copy this set</button>'
+          + '<button class="btn ghost small" type="button" data-gact="regen" data-id="'+g.id+'">Regenerate copy</button>'
+          + (p ? '<a class="btn ghost small" href="'+esc(p.url)+'" target="_blank" rel="noopener">Product page</a>' : "")
+          + '<span class="spacer"></span>'
+          + '<button class="btn ghost small" type="button" data-gact="del" data-id="'+g.id+'">Delete group</button></div>'
+          + '</article>';
+      }).join("");
+      groups.forEach(function(g){
+        ["pt1","pt2","h1","h2"].forEach(function(f){
+          var el = document.querySelector('[data-group="'+g.id+'"] [data-gf="'+f+'"]');
+          if (el) el.addEventListener("input", function(){ g[f] = el.value; });
+        });
+      });
+    }
+
+    /* ===== Grouping logic ===== */
+    function autoGroup(){
+      var used = {};
+      groups.forEach(function(g){ g.videoIds.forEach(function(id){ used[id] = true; }); });
+      var pool = videos.filter(function(v){ return !used[v.id]; });
+      if (pool.length < 3){ toast("You need at least 3 ungrouped videos to build a trio."); return 0; }
+      pool.forEach(function(v){ if (!v.analysis) v.analysis = analyze(v); });
+      function key(v){ return v.scan && v.scan.productIdx > -1 ? "p"+v.scan.productIdx : (v.scan && v.scan.type ? "t"+v.scan.type : "x"); }
+      pool.sort(function(a,b){
+        if (key(a) !== key(b)) return key(a) < key(b) ? -1 : 1;
+        return (b.analysis ? b.analysis.scores.overall : 0) - (a.analysis ? a.analysis.scores.overall : 0);
+      });
+      var made = 0, i = 0;
+      while (pool.length - i >= 3){
+        var trio = pool.slice(i, i+3);
+        var angles = {}; var diverse = trio.every(function(v){ if (angles[v.angle]) return false; angles[v.angle] = 1; return true; });
+        if (!diverse){
+          var swapped = false;
+          for (var j = i+3; j < pool.length; j++){ if (!angles[pool[j].angle]){ var tmp = pool[i+2]; pool[i+2] = pool[j]; pool[j] = tmp; swapped = true; break; } }
+          trio = pool.slice(i, i+3);
+        }
+        makeGroup(trio.map(function(v){ return v.id; }));
+        made++; i += 3;
+      }
+      renderVideos(); renderGroups();
+      return made;
+    }
+
+    /* ===== Export / copy ===== */
+    function groupText(g, gi){
+      var pi = groupProduct(g); var p = pi > -1 ? CATALOG[pi] : null;
+      var lines = ["GROUP " + (gi+1) + " — " + RING_NAMES[g.ring] + " (3:2:2 Flexible Ad)", "Creatives:"];
+      g.videoIds.forEach(function(id, i){ var v = videos.find(function(x){ return x.id===id; }); if (v) lines.push("  " + (i+1) + ". " + v.title + " (" + v.format + ")" + (v.url ? " — " + v.url : "")); });
+      if (p) lines.push("Product: " + p.name + " Hair Extensions — from " + money(p.price) + (p.was ? " (was " + money(p.was) + ")" : ""), "Product link: " + p.url);
+      lines.push("", "PRIMARY TEXT 1:", g.pt1, "", "PRIMARY TEXT 2:", g.pt2, "", "HEADLINE 1: " + g.h1, "HEADLINE 2: " + g.h2, "", "CTA BUTTON: " + brand.cta, "");
+      return lines.join("\n");
+    }
+    function copyText(txt, msg){
+      function done(){ toast(msg); }
+      if (navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(txt).then(done, function(){ fallback(); }); } else fallback();
+      function fallback(){ var ta = document.createElement("textarea"); ta.value = txt; document.body.appendChild(ta); ta.select(); try { document.execCommand("copy"); done(); } catch(e){ toast("Copy failed — select the text manually."); } document.body.removeChild(ta); }
+    }
+    function download(name, content, type){
+      var blob = new Blob([content], { type: type || "text/plain;charset=utf-8" });
+      var a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name;
+      document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 400);
+    }
+
+    /* ===== Catalog render ===== */
+    var catType = "All";
+    function renderCatalog(){
+      $("countCatalog").textContent = CATALOG.length;
+      $("syncDate").textContent = SYNC_DATE;
+      var types = ["All"]; CATALOG.forEach(function(p){ if (types.indexOf(p.type) === -1) types.push(p.type); });
+      $("catFilters").innerHTML = types.map(function(t){ return '<button type="button" data-ctype="'+esc(t)+'" aria-pressed="'+(catType===t)+'">'+esc(t)+'</button>'; }).join("");
+      $("catFilters").querySelectorAll("button").forEach(function(b){ b.addEventListener("click", function(){ catType = b.dataset.ctype; renderCatalog(); }); });
+      var q = ($("catSearch").value || "").toLowerCase();
+      var list = CATALOG.filter(function(p){ return (catType === "All" || p.type === catType) && (p.name.toLowerCase().indexOf(q) > -1); });
+      $("catInfo").textContent = "Showing " + list.length + " of " + CATALOG.length + " products";
+      $("catGrid").innerHTML = list.map(function(p){
+        var off = p.was ? Math.round((1 - p.price / p.was) * 100) : 0;
+        return '<article class="card"><div class="prod" style="flex:1"><span class="tag" style="align-self:flex-start">'+esc(p.type)+'</span><h3>'+esc(p.name)+' Hair Extensions</h3>'
+          + '<div class="price">From '+money(p.price)+(p.was ? ' <s>'+money(p.was)+'</s>' : '')+'</div>'
+          + (off ? '<span class="off">Black Friday −'+off+'%</span>' : '')
+          + '<a href="'+esc(p.url)+'" target="_blank" rel="noopener">View product →</a></div></article>';
+      }).join("");
+    }
+    $("catSearch").addEventListener("input", renderCatalog);
+
+    /* ===== Events: add form ===== */
+    var pendingFile = null;
+    $("fFile").addEventListener("change", function(){
+      var f = this.files && this.files[0]; if (!f) { pendingFile = null; return; }
+      pendingFile = { url: URL.createObjectURL(f), name: f.name, duration: "", thumb: "" };
+      var vid = document.createElement("video");
+      vid.preload = "metadata"; vid.muted = true; vid.src = pendingFile.url;
+      vid.addEventListener("loadedmetadata", function(){
+        var d = Math.round(vid.duration || 0);
+        pendingFile.duration = Math.floor(d/60) + ":" + String(d%60).padStart(2,"0");
+        try { vid.currentTime = Math.min(1, (vid.duration||2)/2); } catch(e){}
+      });
+      vid.addEventListener("seeked", function(){
+        try {
+          var c = document.createElement("canvas"); c.width = vid.videoWidth || 640; c.height = vid.videoHeight || 360;
+          c.getContext("2d").drawImage(vid, 0, 0, c.width, c.height);
+          pendingFile.thumb = c.toDataURL("image/jpeg", 0.72);
+        } catch(e){}
+      });
+    });
+    $("addForm").addEventListener("submit", function(e){
+      e.preventDefault();
+      var v = {
+        id: uid++, title: $("fTitle").value.trim(), url: $("fUrl").value.trim(),
+        fileUrl: pendingFile ? pendingFile.url : "", fileName: pendingFile ? pendingFile.name : "",
+        thumb: pendingFile ? pendingFile.thumb : "", duration: pendingFile ? pendingFile.duration : "",
+        format: $("fFormat").value, ring: Number($("fRing").value), angle: $("fAngle").value,
+        hook: $("fHook").value.trim(), transcript: $("fTranscript").value.trim(), notes: $("fNotes").value.trim(),
+        selected: false, analysis: null, scan: null
+      };
+      if (!v.title){ toast("Give the video a title first."); return; }
+      v.scan = scanProduct(v);
+      videos.unshift(v);
+      this.reset(); pendingFile = null;
+      renderVideos();
+      var p = v.scan.productIdx > -1 ? CATALOG[v.scan.productIdx] : null;
+      toast(p ? "Added. Product detected: " + p.name + " (from " + money(p.price) + ")." : "Added. No confident product match — enrich the transcript or map it manually.");
+    });
+
+    /* ===== Events: video card actions (delegated) ===== */
+    $("videoCards").addEventListener("click", function(e){
+      var btn = e.target.closest("[data-act]"); if (!btn || btn.tagName === "INPUT" || btn.tagName === "SELECT") return;
+      var id = Number(btn.dataset.id); var v = videos.find(function(x){ return x.id===id; }); if (!v) return;
+      if (btn.dataset.act === "analyze"){ v.scan = scanProduct(v); v.analysis = analyze(v); renderVideos(); toast("Analyzed: " + v.title + " — overall " + v.analysis.scores.overall + "/100, " + RING_NAMES[v.analysis.ring] + "."); }
+      if (btn.dataset.act === "rescan"){ v.scan = scanProduct(v); renderVideos(); toast("Product scan re-run for “" + v.title + "”."); }
+      if (btn.dataset.act === "del"){ videos = videos.filter(function(x){ return x.id!==id; }); groups = groups.filter(function(g){ return g.videoIds.indexOf(id) === -1; }); renderVideos(); renderGroups(); toast("Video deleted."); }
+    });
+    $("videoCards").addEventListener("change", function(e){
+      var el = e.target.closest("[data-act]"); if (!el) return;
+      var id = Number(el.dataset.id); var v = videos.find(function(x){ return x.id===id; }); if (!v) return;
+      if (el.dataset.act === "pick"){ v.selected = el.checked; renderVideos(); }
+      if (el.dataset.act === "remap"){
+        var idx = Number(el.value);
+        if (!v.scan) v.scan = { type:null, shade:null, texture:null, length:null, productIdx:-1, confidence:0 };
+        v.scan.productIdx = idx; v.scan.confidence = idx > -1 ? 100 : 0;
+        renderVideos(); toast(idx > -1 ? "Mapped to " + CATALOG[idx].name + "." : "Product mapping cleared.");
+      }
+    });
+
+    /* ===== Events: toolbar & groups ===== */
+    $("btnAnalyzeAll").addEventListener("click", function(){
+      if (!videos.length){ toast("Add a video first."); return; }
+      videos.forEach(function(v){ v.scan = scanProduct(v); v.analysis = analyze(v); });
+      renderVideos(); toast("All " + videos.length + " videos analyzed.");
+    });
+    function doAutoGroup(){ var n = autoGroup(); if (n > 0){ gotoTab("groups"); toast(n + " trio group" + (n>1?"s":"") + " created, each with 2 primary texts + 2 headlines."); } }
+    $("btnAutoGroup").addEventListener("click", doAutoGroup);
+    $("btnAutoGroup2").addEventListener("click", doAutoGroup);
+    $("btnManualGroup").addEventListener("click", function(){
+      var sel = videos.filter(function(v){ return v.selected; });
+      if (sel.length !== 3){ toast("Select exactly 3 videos."); return; }
+      sel.forEach(function(v){ if (!v.analysis) v.analysis = analyze(v); v.selected = false; });
+      makeGroup(sel.map(function(v){ return v.id; }));
+      renderVideos(); renderGroups(); gotoTab("groups");
+      toast("Trio created with 2 primary texts + 2 headlines.");
+    });
+    $("groupList").addEventListener("click", function(e){
+      var btn = e.target.closest("[data-gact]"); if (!btn) return;
+      var id = Number(btn.dataset.id); var gi = groups.findIndex(function(g){ return g.id===id; }); if (gi === -1) return;
+      var g = groups[gi];
+      if (btn.dataset.gact === "copy") copyText(groupText(g, gi), "Group " + (gi+1) + " copy set copied.");
+      if (btn.dataset.gact === "regen"){ var c = genCopy(g); g.pt1 = c.pt1; g.pt2 = c.pt2; g.h1 = c.h1; g.h2 = c.h2; renderGroups(); toast("Copy regenerated for Group " + (gi+1) + "."); }
+      if (btn.dataset.gact === "del"){ groups.splice(gi, 1); renderGroups(); toast("Group deleted."); }
+    });
+    $("btnExport").addEventListener("click", function(){
+      if (!groups.length){ toast("Create a group first."); return; }
+      var head = "MACSARA HAIR — META ADS COPY (3:2:2 FLEXIBLE ADS)\nOffer: " + brand.offer + "\nExported: " + new Date().toLocaleDateString("en-US", { year:"numeric", month:"long", day:"numeric" }) + "\n============================================================\n\n";
+      download("macsara-322-ad-copy.txt", head + groups.map(function(g, i){ return groupText(g, i); }).join("\n------------------------------------------------------------\n\n"));
+      toast("Exported " + groups.length + " group(s) to macsara-322-ad-copy.txt");
+    });
+
+    /* ===== Brand form ===== */
+    function syncBrand(){
+      brand.offer = $("bOffer").value.trim() || brand.offer;
+      brand.usp1 = $("bUsp1").value.trim();
+      brand.usp2 = $("bUsp2").value.trim();
+      brand.trust = $("bTrust").value.trim();
+      brand.cta = $("bCta").value;
+    }
+    syncBrand();
+    $("brandForm").addEventListener("submit", function(e){ e.preventDefault(); syncBrand(); renderGroups(); toast("Brand profile applied. Regenerate group copy to use it."); });
+
+    /* ===== Publish helpers ===== */
+    $("btnDownloadHtml").addEventListener("click", function(){
+      var html = "<!doctype html>\n" + document.documentElement.outerHTML;
+      download("index.html", html, "text/html;charset=utf-8");
+      toast("index.html downloaded — upload it to your GitHub repo root.");
+    });
+    $("btnCopyReadme").addEventListener("click", function(){ copyText($("readmeBox").textContent, "README.md copied."); });
+
+    /* ===== Init ===== */
+    renderVideos(); renderGroups(); renderCatalog();
+    </script>
+  </body>
+</html>
