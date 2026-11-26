@@ -116,6 +116,24 @@
       label.pick{display:inline-flex;align-items:center;gap:8px;font-weight:700;font-size:14px;cursor:pointer;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
       label.pick input{width:19px;height:19px;accent-color:var(--accent)}
       .picked{outline:2px solid var(--accent);outline-offset:-2px}
+      /* Group folders & launched status */
+      .folder{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:12px;overflow:hidden}
+      .folder-head{display:flex;flex-wrap:wrap;gap:8px;align-items:center;width:100%;background:var(--surface);border:none;padding:13px 16px;font:inherit;text-align:left;cursor:pointer;color:var(--ink)}
+      .folder-head:hover{background:var(--surface2)}
+      .folder-head .chev{font-size:15px;font-weight:800;color:var(--gold);flex:none}
+      .folder-head .fname{font-weight:800;font-size:15.5px}
+      .folder-body{border-top:1px solid var(--line);padding:14px 16px 16px}
+      .badge-launched{background:var(--good);color:#fff;border-radius:999px;padding:3px 10px;font-size:12px;font-weight:800}
+      .badge-not{background:var(--chip);color:var(--ink2);border:1px solid var(--line);border-radius:999px;padding:3px 10px;font-size:12px;font-weight:800}
+      .gname{font:inherit;font-weight:800;font-size:17px;border:1px solid transparent;border-radius:8px;padding:4px 8px;background:transparent;color:var(--ink);min-width:220px;max-width:100%}
+      .gname:hover,.gname:focus{border-color:var(--line);background:var(--surface);outline:none}
+      .group-head{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+      .group-head .spacer{flex:1}
+      .launch-row{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:12px 0}
+      .launch-row>div{min-width:170px}
+      .launch-row label.f{margin-bottom:3px}
+      .launch-row input{width:100%}
+      .filterbar button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
       /* Groups */
       .group{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px;margin-bottom:16px}
       .group head{display:block}
@@ -179,8 +197,8 @@
       <div class="steps" aria-label="Workflow">
         <div class="step"><b><i>1</i> Add &amp; scan videos</b><p>Paste a link or upload a clip. The tool detects the product type, shade and texture in the clip and maps it to shop.macsarahair.com.</p></div>
         <div class="step"><b><i>2</i> Analyze</b><p>Every video is scored on hook, clarity, trust and closing power, with strengths, weaknesses and a suggested Ring 1–5.</p></div>
-        <div class="step"><b><i>3</i> Group in 3s</b><p>Auto-group or hand-pick exactly 3 videos. Each trio becomes one Flexible Ad creative set.</p></div>
-        <div class="step"><b><i>4</i> Copy 2 + 2</b><p>Each group gets 2 primary texts and 2 headlines in English, written from the mapped product and its real price.</p></div>
+        <div class="step"><b><i>3</i> Group in 3s</b><p>Auto-group or hand-pick exactly 3 videos. Each trio is named by its Ring and lives in its own folder — open it to view the videos inside.</p></div>
+        <div class="step"><b><i>4</i> Copy 2 + 2</b><p>Each group gets 2 primary texts and 2 headlines in English, written from the mapped product and its real price. Mark a group Launched once it is live on Meta, so you always know what has run and what has not.</p></div>
       </div>
 
       <nav class="tabs" role="tablist" aria-label="Sections">
@@ -263,13 +281,22 @@
 
         <div class="toolbar">
           <button class="btn gold" id="btnAnalyzeAll" type="button">Analyze all videos</button>
+          <button class="btn ghost" id="btnClearSaved" type="button" title="Remove the videos and groups saved in this browser">Clear saved data</button>
           <button class="btn ghost" id="btnAutoGroup2" type="button">Auto-group into trios →</button>
           <span class="spacer"></span>
           <span class="hint" id="selInfo">0 of 3 selected for a manual group</span>
           <button class="btn" id="btnManualGroup" type="button" disabled>Create group from selected (3)</button>
         </div>
 
+        <h2 style="margin:6px 0 4px;font-size:21px">Ungrouped videos</h2>
         <div class="cards" id="videoCards"></div>
+        <h2 style="margin:26px 0 4px;font-size:21px">Grouped videos — folders</h2>
+        <p class="sub">Videos already in a trio live inside their group folder. Open a folder to view the videos inside, or remove a video from its group.</p>
+        <div id="groupedFolders"></div>
+        <div class="empty" id="groupedEmpty">
+          <b>No grouped videos yet</b>
+          Grouped videos will appear here, inside a folder named by their Ring.
+        </div>
         <div class="empty" id="videoEmpty">
           <b>No videos yet</b>
           Add your first clip above — a YouTube, TikTok or Drive link, or upload the file directly. Try one Tape-In, one Genius Weft and one testimonial clip to make your first trio.
@@ -283,6 +310,13 @@
           <button class="btn ghost" id="btnExport" type="button">Export all copy (.txt)</button>
           <span class="spacer"></span>
           <span class="hint">One group = one Meta Flexible Ad: 3 creatives + 2 primary texts + 2 headlines = 12 combinations sharing one data pool.</span>
+        </div>
+        <div class="toolbar filterbar" id="groupFilters">
+          <button class="btn ghost small" type="button" data-gfilter="all" aria-pressed="true">All groups</button>
+          <button class="btn ghost small" type="button" data-gfilter="not" aria-pressed="false">Not launched yet</button>
+          <button class="btn ghost small" type="button" data-gfilter="launched" aria-pressed="false">Launched</button>
+          <span class="spacer"></span>
+          <span class="hint" id="groupSummary"></span>
         </div>
         <div id="groupList"></div>
         <div class="empty" id="groupEmpty">
@@ -395,7 +429,9 @@ No build step, no server, no dependencies. Catalog snapshot: see the Shop Catalo
 
     /* ===== State (in-memory for this session) ===== */
     var videos = [];   // {id,title,url,fileUrl,thumb,format,ring,angle,hook,transcript,notes,duration,scan,analysis,selected}
-    var groups = [];   // {id,videoIds,ring,productIdx,pt1,pt2,h1,h2}
+    var groups = [];   // {id,name,customName,videoIds,ring,launched,launchedDate,campaign,collapsed,folderOpen,pt1,pt2,h1,h2}
+    var groupFilter = "all";
+    var LS_KEY = "macsara-video-ads-v1";
     var uid = 1;
     var brand = { offer:"Black Friday — 50% off Best Sellers", usp1:"", usp2:"", trust:"", cta:"Shop Now" };
 
@@ -530,55 +566,77 @@ No build step, no server, no dependencies. Catalog snapshot: see the Shop Catalo
     function scoreBar(name, val){
       return '<div class="score"><div class="n"><span>'+name+'</span><span>'+val+'/100</span></div><div class="bar"><i style="width:'+val+'%"></i></div></div>';
     }
+    function groupOfVideo(id){
+      for (var i=0;i<groups.length;i++){ if (groups[i].videoIds.indexOf(id) > -1) return groups[i]; }
+      return null;
+    }
+    function videoCardHTML(v, inGroup){
+      var p = v.scan && v.scan.productIdx > -1 ? CATALOG[v.scan.productIdx] : null;
+      var det = [];
+      if (v.scan && v.scan.type) det.push(v.scan.type);
+      if (v.scan && v.scan.shade) det.push(v.scan.shade);
+      if (v.scan && v.scan.texture) det.push(v.scan.texture);
+      if (v.scan && v.scan.length) det.push(v.scan.length);
+      var mapBox = '<div class="mapbox"><div class="lbl">Product scan — mapped to shop</div>';
+      if (p){
+        var off = p.was ? Math.round((1 - p.price / p.was) * 100) : 0;
+        mapBox += '<div class="pname">'+esc(p.name)+' Hair Extensions</div>'
+          + '<div class="price">From <b>'+money(p.price)+'</b>' + (p.was ? ' <s>'+money(p.was)+'</s><span class="off">−'+off+'%</span>' : '') + '</div>'
+          + '<div><a href="'+esc(p.url)+'" target="_blank" rel="noopener">View on shop.macsarahair.com</a></div>'
+          + '<div class="conf">Detected in clip: '+(det.length ? esc(det.join(" · ")) : "partial match")+' · Match confidence '+v.scan.confidence+'%</div>';
+      } else {
+        mapBox += '<div class="pname">No confident match yet</div><div class="conf">Add the product type and shade to the title or transcript, or pick the product manually below.</div>';
+      }
+      mapBox += '<select data-act="remap" data-id="'+v.id+'" aria-label="Mapped product for '+esc(v.title)+'"><option value="-1">— No product mapped —</option>'
+        + CATALOG.map(function(cp, i){ return '<option value="'+i+'"'+(v.scan && v.scan.productIdx===i ? ' selected' : '')+'>'+esc(cp.name)+' — from '+money(cp.price)+'</option>'; }).join("")
+        + '</select></div>';
+      var an = "";
+      if (v.analysis){
+        var sc = v.analysis.scores;
+        an = '<div class="overall"><span class="big">'+sc.overall+'</span><span><b>Overall score</b><br /><span class="tag ring">'+RING_NAMES[v.analysis.ring]+'</span></span></div>'
+          + '<div class="scores">'+scoreBar("Hook", sc.hook)+scoreBar("Clarity", sc.clarity)+scoreBar("Trust", sc.trust)+scoreBar("Closing power", sc.close)+'</div>'
+          + '<div class="sw"><span class="good">Strengths</span><ul>'+v.analysis.strengths.map(function(x){ return "<li>"+esc(x)+"</li>"; }).join("")+'</ul></div>'
+          + (v.analysis.weaknesses.length ? '<div class="sw"><span class="bad">Fix first</span><ul>'+v.analysis.weaknesses.map(function(x){ return "<li>"+esc(x)+"</li>"; }).join("")+'</ul></div>' : "");
+      } else {
+        an = '<p class="hint" style="margin:0">Not analyzed yet — hit “Analyze all videos” or Analyze on this card.</p>';
+      }
+      var g = inGroup ? groupOfVideo(v.id) : null;
+      var footPick = inGroup
+        ? '<span class="tag ring">In group: '+esc(g ? g.name : "")+'</span><button class="btn ghost small" type="button" data-act="ungroup" data-id="'+v.id+'">Remove from group</button>'
+        : '<label class="pick"><input type="checkbox" data-act="pick" data-id="'+v.id+'"'+(v.selected ? " checked" : "")+' /> Group</label>';
+      return '<article class="card'+(v.selected ? " picked" : "")+'" data-card="'+v.id+'">'
+        + '<div class="thumb">'+thumbHTML(v)+'<span class="fmt">'+esc(v.format)+'</span>'+(v.duration ? '<span class="dur">'+esc(v.duration)+'</span>' : "")+'</div>'
+        + '<div class="body"><h3>'+esc(v.title)+'</h3>'
+        + '<div class="meta"><span class="tag">'+esc(v.angle)+'</span>'+(v.ring ? '<span class="tag ring">'+RING_NAMES[v.ring]+'</span>' : '<span class="tag">Ring: auto</span>')+'</div>'
+        + '<div class="src">'+sourceLabel(v)+'</div>'
+        + (v.hook ? '<div class="hookline"><b>Hook</b>“'+esc(v.hook)+'”</div>' : "")
+        + mapBox + an
+        + '<div class="foot">'+footPick
+        + '<button class="btn ghost small" type="button" data-act="analyze" data-id="'+v.id+'">Analyze</button>'
+        + '<button class="btn ghost small" type="button" data-act="rescan" data-id="'+v.id+'">Re-scan product</button>'
+        + '<span class="spacer" style="flex:1"></span>'
+        + '<button class="btn ghost small" type="button" data-act="del" data-id="'+v.id+'">Delete</button></div>'
+        + '</div></article>';
+    }
     function renderVideos(){
+      var ungrouped = videos.filter(function(v){ return !groupOfVideo(v.id); });
       $("countVideos").textContent = videos.length;
       $("videoEmpty").style.display = videos.length ? "none" : "block";
-      var sel = videos.filter(function(v){ return v.selected; }).length;
+      var sel = ungrouped.filter(function(v){ return v.selected; }).length;
       $("selInfo").textContent = sel + " of 3 selected for a manual group";
       $("btnManualGroup").disabled = sel !== 3;
-      $("videoCards").innerHTML = videos.map(function(v){
-        var p = v.scan && v.scan.productIdx > -1 ? CATALOG[v.scan.productIdx] : null;
-        var det = [];
-        if (v.scan && v.scan.type) det.push(v.scan.type);
-        if (v.scan && v.scan.shade) det.push(v.scan.shade);
-        if (v.scan && v.scan.texture) det.push(v.scan.texture);
-        if (v.scan && v.scan.length) det.push(v.scan.length);
-        var mapBox = '<div class="mapbox"><div class="lbl">Product scan — mapped to shop</div>';
-        if (p){
-          var off = p.was ? Math.round((1 - p.price / p.was) * 100) : 0;
-          mapBox += '<div class="pname">'+esc(p.name)+' Hair Extensions</div>'
-            + '<div class="price">From <b>'+money(p.price)+'</b>' + (p.was ? ' <s>'+money(p.was)+'</s><span class="off">−'+off+'%</span>' : '') + '</div>'
-            + '<div><a href="'+esc(p.url)+'" target="_blank" rel="noopener">View on shop.macsarahair.com</a></div>'
-            + '<div class="conf">Detected in clip: '+(det.length ? esc(det.join(" · ")) : "partial match")+' · Match confidence '+v.scan.confidence+'%</div>';
-        } else {
-          mapBox += '<div class="pname">No confident match yet</div><div class="conf">Add the product type and shade to the title or transcript, or pick the product manually below.</div>';
-        }
-        mapBox += '<select data-act="remap" data-id="'+v.id+'" aria-label="Mapped product for '+esc(v.title)+'"><option value="-1">— No product mapped —</option>'
-          + CATALOG.map(function(cp, i){ return '<option value="'+i+'"'+(v.scan && v.scan.productIdx===i ? ' selected' : '')+'>'+esc(cp.name)+' — from '+money(cp.price)+'</option>'; }).join("")
-          + '</select></div>';
-        var an = "";
-        if (v.analysis){
-          var sc = v.analysis.scores;
-          an = '<div class="overall"><span class="big">'+sc.overall+'</span><span><b>Overall score</b><br /><span class="tag ring">'+RING_NAMES[v.analysis.ring]+'</span></span></div>'
-            + '<div class="scores">'+scoreBar("Hook", sc.hook)+scoreBar("Clarity", sc.clarity)+scoreBar("Trust", sc.trust)+scoreBar("Closing power", sc.close)+'</div>'
-            + '<div class="sw"><span class="good">Strengths</span><ul>'+v.analysis.strengths.map(function(x){ return "<li>"+esc(x)+"</li>"; }).join("")+'</ul></div>'
-            + (v.analysis.weaknesses.length ? '<div class="sw"><span class="bad">Fix first</span><ul>'+v.analysis.weaknesses.map(function(x){ return "<li>"+esc(x)+"</li>"; }).join("")+'</ul></div>' : "");
-        } else {
-          an = '<p class="hint" style="margin:0">Not analyzed yet — hit “Analyze all videos” or Analyze on this card.</p>';
-        }
-        return '<article class="card'+(v.selected ? " picked" : "")+'" data-card="'+v.id+'">'
-          + '<div class="thumb">'+thumbHTML(v)+'<span class="fmt">'+esc(v.format)+'</span>'+(v.duration ? '<span class="dur">'+esc(v.duration)+'</span>' : "")+'</div>'
-          + '<div class="body"><h3>'+esc(v.title)+'</h3>'
-          + '<div class="meta"><span class="tag">'+esc(v.angle)+'</span>'+(v.ring ? '<span class="tag ring">'+RING_NAMES[v.ring]+'</span>' : '<span class="tag">Ring: auto</span>')+'</div>'
-          + '<div class="src">'+sourceLabel(v)+'</div>'
-          + (v.hook ? '<div class="hookline"><b>Hook</b>“'+esc(v.hook)+'”</div>' : "")
-          + mapBox + an
-          + '<div class="foot"><label class="pick"><input type="checkbox" data-act="pick" data-id="'+v.id+'"'+(v.selected ? " checked" : "")+' /> Group</label>'
-          + '<button class="btn ghost small" type="button" data-act="analyze" data-id="'+v.id+'">Analyze</button>'
-          + '<button class="btn ghost small" type="button" data-act="rescan" data-id="'+v.id+'">Re-scan product</button>'
-          + '<span class="spacer" style="flex:1"></span>'
-          + '<button class="btn ghost small" type="button" data-act="del" data-id="'+v.id+'">Delete</button></div>'
-          + '</div></article>';
+      $("videoCards").innerHTML = ungrouped.map(function(v){ return videoCardHTML(v, false); }).join("");
+      renderGroupedFolders();
+      saveState();
+    }
+    function renderGroupedFolders(){
+      $("groupedEmpty").style.display = groups.length ? "none" : "block";
+      $("groupedFolders").innerHTML = groups.map(function(g){
+        var vs = g.videoIds.map(function(id){ return videos.find(function(x){ return x.id===id; }); }).filter(Boolean);
+        var badge = g.launched ? '<span class="badge-launched">● Launched'+(g.launchedDate ? ' · '+esc(g.launchedDate) : '')+'</span>' : '<span class="badge-not">○ Not launched yet</span>';
+        var head = '<button class="folder-head" type="button" data-fact="toggle" data-id="'+g.id+'"><span class="chev">'+(g.folderOpen ? "▾" : "▸")+'</span><span class="fname">'+esc(g.name)+'</span><span class="tag ring">'+RING_NAMES[g.ring]+'</span>'+badge+'<span class="tag">'+vs.length+' videos</span></button>';
+        var body = g.folderOpen ? '<div class="folder-body"><div class="cards">'+vs.map(function(v){ return videoCardHTML(v, true); }).join("")+'</div><div class="toolbar" style="margin:12px 0 0"><button class="btn ghost small" type="button" data-fact="view" data-id="'+g.id+'">Open group &amp; copy →</button></div></div>' : "";
+        return '<div class="folder" data-folder="'+g.id+'">'+head+body+'</div>';
       }).join("");
     }
 
@@ -627,11 +685,17 @@ No build step, no server, no dependencies. Catalog snapshot: see the Shop Catalo
       }
       return { pt1: pt1, pt2: pt2, h1: h1, h2: h2 };
     }
+    function defaultGroupName(ring, excludeId){
+      var base = RING_NAMES[ring] || ("Ring " + ring);
+      var n = groups.filter(function(x){ return x.ring === ring && x.id !== excludeId; }).length;
+      return n ? base + " #" + (n + 1) : base;
+    }
     function makeGroup(videoIds){
       var vs = videoIds.map(function(id){ return videos.find(function(x){ return x.id===id; }); }).filter(Boolean);
       var rings = vs.map(function(v){ return v.analysis ? v.analysis.ring : (v.ring||0); }).filter(function(r){ return r>0; });
       var ring = rings.length ? rings.sort(function(a,b){ return rings.filter(function(x){return x===a;}).length - rings.filter(function(x){return x===b;}).length; }).pop() : 1;
-      var g = { id: uid++, videoIds: videoIds.slice(), ring: ring };
+      var g = { id: uid++, videoIds: videoIds.slice(), ring: ring, name: "", customName: false, launched: false, launchedDate: "", campaign: "", collapsed: false, folderOpen: false };
+      g.name = defaultGroupName(ring, g.id);
       var c = genCopy(g); g.pt1 = c.pt1; g.pt2 = c.pt2; g.h1 = c.h1; g.h2 = c.h2;
       groups.push(g);
       return g;
@@ -639,40 +703,60 @@ No build step, no server, no dependencies. Catalog snapshot: see the Shop Catalo
 
     /* ===== Render groups ===== */
     function renderGroups(){
+      var launchedCount = groups.filter(function(g){ return g.launched; }).length;
       $("countGroups").textContent = groups.length;
+      $("groupSummary").textContent = groups.length ? (launchedCount + " launched · " + (groups.length - launchedCount) + " not launched yet") : "";
+      document.querySelectorAll("#groupFilters [data-gfilter]").forEach(function(b){ b.setAttribute("aria-pressed", String(b.dataset.gfilter === groupFilter)); });
+      var shown = groups.filter(function(g){ return groupFilter === "all" || (groupFilter === "launched" ? g.launched : !g.launched); });
       $("groupEmpty").style.display = groups.length ? "none" : "block";
-      $("groupList").innerHTML = groups.map(function(g, gi){
-        var pi = groupProduct(g); var p = pi > -1 ? CATALOG[pi] : null;
-        var slots = g.videoIds.map(function(id){
-          var v = videos.find(function(x){ return x.id===id; });
-          if (!v) return "";
-          return '<div class="slot"><div class="t">'+thumbHTML(v)+'</div><div class="cap"><b>'+esc(v.title)+'</b>'+esc(v.angle)+' · '+esc(v.format)+'</div></div>';
+      if (!shown.length && groups.length){
+        $("groupList").innerHTML = '<div class="empty"><b>No groups in this view</b>Try the “All groups” filter — no group here is ' + (groupFilter === "launched" ? "launched yet." : "still waiting to launch.") + '</div>';
+      } else {
+        $("groupList").innerHTML = shown.map(function(g){
+          var gi = groups.indexOf(g);
+          var pi = groupProduct(g); var p = pi > -1 ? CATALOG[pi] : null;
+          var slots = g.videoIds.map(function(id){
+            var v = videos.find(function(x){ return x.id===id; });
+            if (!v) return "";
+            return '<div class="slot"><div class="t">'+thumbHTML(v)+'</div><div class="cap"><b>'+esc(v.title)+'</b>'+esc(v.angle)+' · '+esc(v.format)+'</div></div>';
+          }).join("");
+          var badge = g.launched ? '<span class="badge-launched">● Launched'+(g.launchedDate ? ' · '+esc(g.launchedDate) : '')+'</span>' : '<span class="badge-not">○ Not launched yet</span>';
+          var ringOpts = [1,2,3,4,5].map(function(r){ return '<option value="'+r+'"'+(g.ring===r ? ' selected' : '')+'>'+RING_NAMES[r]+'</option>'; }).join("");
+          var body = '<div class="trio">'+slots+'</div>'
+            + '<div class="launch-row"><div><label class="f" for="camp-'+g.id+'">Campaign / ad name <span>(optional)</span></label><input type="text" id="camp-'+g.id+'" data-gfield="campaign" data-id="'+g.id+'" value="'+esc(g.campaign||"")+'" placeholder="e.g. BF Tape-In — Ring 1" /></div>'
+            + '<div><label class="f" for="ldate-'+g.id+'">Launched on</label><input type="date" id="ldate-'+g.id+'" data-gfield="launchedDate" data-id="'+g.id+'" value="'+esc(g.launchedDate||"")+'" /></div>'
+            + '<button class="btn small" type="button" data-gact="launch" data-id="'+g.id+'">'+(g.launched ? "Mark as not launched" : "Mark as launched")+'</button></div>'
+            + '<div class="copygrid">'
+            + '<div class="copybox"><label class="f" for="pt1-'+g.id+'">Primary Text 1</label><textarea id="pt1-'+g.id+'" data-gf="pt1">'+esc(g.pt1)+'</textarea></div>'
+            + '<div class="copybox"><label class="f" for="pt2-'+g.id+'">Primary Text 2</label><textarea id="pt2-'+g.id+'" data-gf="pt2">'+esc(g.pt2)+'</textarea></div>'
+            + '<div class="copybox"><label class="f" for="h1-'+g.id+'">Headline 1</label><textarea class="hl" id="h1-'+g.id+'" data-gf="h1">'+esc(g.h1)+'</textarea></div>'
+            + '<div class="copybox"><label class="f" for="h2-'+g.id+'">Headline 2</label><textarea class="hl" id="h2-'+g.id+'" data-gf="h2">'+esc(g.h2)+'</textarea></div>'
+            + '</div>'
+            + '<div class="toolbar" style="margin:14px 0 0">'
+            + '<button class="btn small" type="button" data-gact="copy" data-id="'+g.id+'">Copy this set</button>'
+            + '<button class="btn ghost small" type="button" data-gact="regen" data-id="'+g.id+'">Regenerate copy</button>'
+            + (p ? '<a class="btn ghost small" href="'+esc(p.url)+'" target="_blank" rel="noopener">Product page</a>' : "")
+            + '<span class="spacer"></span>'
+            + '<button class="btn ghost small" type="button" data-gact="del" data-id="'+g.id+'">Delete group</button></div>';
+          return '<article class="group" data-group="'+g.id+'">'
+            + '<div class="group-head"><button class="btn ghost small" type="button" data-gact="collapse" data-id="'+g.id+'" aria-label="Expand or collapse group">'+(g.collapsed ? "▸" : "▾")+'</button>'
+            + '<input class="gname" type="text" data-gfield="name" data-id="'+g.id+'" value="'+esc(g.name)+'" aria-label="Group name" />'
+            + badge
+            + '<span class="spacer"></span>'
+            + '<select data-gfield="ring" data-id="'+g.id+'" aria-label="Ring for '+esc(g.name)+'" style="max-width:230px">'+ringOpts+'</select></div>'
+            + '<div class="meta" style="margin-top:8px"><span class="tag">3 creatives</span><span class="tag">2 primary texts</span><span class="tag">2 headlines</span><span class="tag">CTA: '+esc(brand.cta)+'</span>'
+            + (p ? '<span class="tag ring">'+esc(p.name)+' — from '+money(p.price)+'</span>' : '<span class="tag">No product mapped</span>') + '</div>'
+            + (g.collapsed ? "" : body)
+            + '</article>';
         }).join("");
-        return '<article class="group" data-group="'+g.id+'">'
-          + '<h3>Group '+(gi+1)+' — '+RING_NAMES[g.ring]+'</h3>'
-          + '<div class="meta" style="margin-top:6px"><span class="tag">3 creatives</span><span class="tag">2 primary texts</span><span class="tag">2 headlines</span><span class="tag">CTA: '+esc(brand.cta)+'</span>'
-          + (p ? '<span class="tag ring">'+esc(p.name)+' — from '+money(p.price)+'</span>' : '<span class="tag">No product mapped</span>') + '</div>'
-          + '<div class="trio">'+slots+'</div>'
-          + '<div class="copygrid">'
-          + '<div class="copybox"><label class="f" for="pt1-'+g.id+'">Primary Text 1</label><textarea id="pt1-'+g.id+'" data-gf="pt1">'+esc(g.pt1)+'</textarea></div>'
-          + '<div class="copybox"><label class="f" for="pt2-'+g.id+'">Primary Text 2</label><textarea id="pt2-'+g.id+'" data-gf="pt2">'+esc(g.pt2)+'</textarea></div>'
-          + '<div class="copybox"><label class="f" for="h1-'+g.id+'">Headline 1</label><textarea class="hl" id="h1-'+g.id+'" data-gf="h1">'+esc(g.h1)+'</textarea></div>'
-          + '<div class="copybox"><label class="f" for="h2-'+g.id+'">Headline 2</label><textarea class="hl" id="h2-'+g.id+'" data-gf="h2">'+esc(g.h2)+'</textarea></div>'
-          + '</div>'
-          + '<div class="toolbar" style="margin:14px 0 0">'
-          + '<button class="btn small" type="button" data-gact="copy" data-id="'+g.id+'">Copy this set</button>'
-          + '<button class="btn ghost small" type="button" data-gact="regen" data-id="'+g.id+'">Regenerate copy</button>'
-          + (p ? '<a class="btn ghost small" href="'+esc(p.url)+'" target="_blank" rel="noopener">Product page</a>' : "")
-          + '<span class="spacer"></span>'
-          + '<button class="btn ghost small" type="button" data-gact="del" data-id="'+g.id+'">Delete group</button></div>'
-          + '</article>';
-      }).join("");
+      }
       groups.forEach(function(g){
         ["pt1","pt2","h1","h2"].forEach(function(f){
           var el = document.querySelector('[data-group="'+g.id+'"] [data-gf="'+f+'"]');
-          if (el) el.addEventListener("input", function(){ g[f] = el.value; });
+          if (el) el.addEventListener("input", function(){ g[f] = el.value; saveState(); });
         });
       });
+      saveState();
     }
 
     /* ===== Grouping logic ===== */
@@ -706,7 +790,7 @@ No build step, no server, no dependencies. Catalog snapshot: see the Shop Catalo
     /* ===== Export / copy ===== */
     function groupText(g, gi){
       var pi = groupProduct(g); var p = pi > -1 ? CATALOG[pi] : null;
-      var lines = ["GROUP " + (gi+1) + " — " + RING_NAMES[g.ring] + " (3:2:2 Flexible Ad)", "Creatives:"];
+      var lines = [(g.name || ("GROUP " + (gi+1))) + " — " + RING_NAMES[g.ring] + " (3:2:2 Flexible Ad)", "Status: " + (g.launched ? "LAUNCHED" + (g.launchedDate ? " on " + g.launchedDate : "") + (g.campaign ? " — " + g.campaign : "") : "NOT LAUNCHED YET"), "Creatives:"];
       g.videoIds.forEach(function(id, i){ var v = videos.find(function(x){ return x.id===id; }); if (v) lines.push("  " + (i+1) + ". " + v.title + " (" + v.format + ")" + (v.url ? " — " + v.url : "")); });
       if (p) lines.push("Product: " + p.name + " Hair Extensions — from " + money(p.price) + (p.was ? " (was " + money(p.was) + ")" : ""), "Product link: " + p.url);
       lines.push("", "PRIMARY TEXT 1:", g.pt1, "", "PRIMARY TEXT 2:", g.pt2, "", "HEADLINE 1: " + g.h1, "HEADLINE 2: " + g.h2, "", "CTA BUTTON: " + brand.cta, "");
@@ -743,6 +827,51 @@ No build step, no server, no dependencies. Catalog snapshot: see the Shop Catalo
       }).join("");
     }
     $("catSearch").addEventListener("input", renderCatalog);
+
+    /* ===== Saved state: link videos + groups survive a reload in this browser ===== */
+    function saveState(){
+      try {
+        var vs = videos.filter(function(v){ return v.url; }).map(function(v){
+          return { id:v.id, title:v.title, url:v.url, format:v.format, ring:v.ring, angle:v.angle, hook:v.hook, transcript:v.transcript, notes:v.notes, selected:false, scan:v.scan, analysis:v.analysis };
+        });
+        localStorage.setItem(LS_KEY, JSON.stringify({ videos: vs, groups: groups, uid: uid, brand: brand }));
+      } catch(e){}
+    }
+    function loadState(){
+      try {
+        var raw = localStorage.getItem(LS_KEY); if (!raw) return;
+        var d = JSON.parse(raw); if (!d || !d.videos) return;
+        videos = d.videos.map(function(v){ v.fileUrl=""; v.fileName=""; v.thumb=""; v.duration=""; v.selected=false; return v; });
+        var maxId = 0; videos.forEach(function(v){ if (v.id > maxId) maxId = v.id; });
+        groups = (d.groups || []).filter(function(g){ return g.videoIds && g.videoIds.length && g.videoIds.every(function(id){ return videos.some(function(v){ return v.id===id; }); }); }).map(function(g){
+          if (!g.name) g.name = defaultGroupName(g.ring || 1, g.id);
+          if (g.launched === undefined) g.launched = false;
+          if (!g.launchedDate) g.launchedDate = "";
+          if (!g.campaign) g.campaign = "";
+          if (g.collapsed === undefined) g.collapsed = false;
+          if (g.folderOpen === undefined) g.folderOpen = false;
+          return g;
+        });
+        groups.forEach(function(g){ if (g.id > maxId) maxId = g.id; });
+        uid = Math.max(d.uid || 0, maxId + 1);
+        if (d.brand) brand = d.brand;
+        if (videos.length || groups.length) setTimeout(function(){ toast("Restored " + videos.length + " video(s) and " + groups.length + " group(s) saved in this browser."); }, 400);
+      } catch(e){}
+    }
+    function ungroupVideo(id){
+      var g = groupOfVideo(id); if (!g) return;
+      g.videoIds = g.videoIds.filter(function(x){ return x !== id; });
+      if (g.videoIds.length < 3){ groups = groups.filter(function(x){ return x.id !== g.id; }); toast("Video removed — the group had fewer than 3 videos, so the group was dissolved."); }
+      else toast("Video removed from “" + g.name + "”.");
+      renderVideos(); renderGroups();
+    }
+    function handleVideoAction(btn){
+      var id = Number(btn.dataset.id); var v = videos.find(function(x){ return x.id===id; }); if (!v) return;
+      if (btn.dataset.act === "analyze"){ v.scan = scanProduct(v); v.analysis = analyze(v); renderVideos(); toast("Analyzed: " + v.title + " — overall " + v.analysis.scores.overall + "/100, " + RING_NAMES[v.analysis.ring] + "."); }
+      if (btn.dataset.act === "rescan"){ v.scan = scanProduct(v); renderVideos(); toast("Product scan re-run for “" + v.title + "”."); }
+      if (btn.dataset.act === "ungroup"){ ungroupVideo(id); }
+      if (btn.dataset.act === "del"){ videos = videos.filter(function(x){ return x.id!==id; }); groups = groups.filter(function(g){ return g.videoIds.indexOf(id) === -1; }); renderVideos(); renderGroups(); toast("Video deleted."); }
+    }
 
     /* ===== Events: add form ===== */
     var pendingFile = null;
@@ -786,10 +915,26 @@ No build step, no server, no dependencies. Catalog snapshot: see the Shop Catalo
     /* ===== Events: video card actions (delegated) ===== */
     $("videoCards").addEventListener("click", function(e){
       var btn = e.target.closest("[data-act]"); if (!btn || btn.tagName === "INPUT" || btn.tagName === "SELECT") return;
-      var id = Number(btn.dataset.id); var v = videos.find(function(x){ return x.id===id; }); if (!v) return;
-      if (btn.dataset.act === "analyze"){ v.scan = scanProduct(v); v.analysis = analyze(v); renderVideos(); toast("Analyzed: " + v.title + " — overall " + v.analysis.scores.overall + "/100, " + RING_NAMES[v.analysis.ring] + "."); }
-      if (btn.dataset.act === "rescan"){ v.scan = scanProduct(v); renderVideos(); toast("Product scan re-run for “" + v.title + "”."); }
-      if (btn.dataset.act === "del"){ videos = videos.filter(function(x){ return x.id!==id; }); groups = groups.filter(function(g){ return g.videoIds.indexOf(id) === -1; }); renderVideos(); renderGroups(); toast("Video deleted."); }
+      handleVideoAction(btn);
+    });
+    $("groupedFolders").addEventListener("click", function(e){
+      var fbtn = e.target.closest("[data-fact]");
+      if (fbtn){
+        var gid = Number(fbtn.dataset.id); var g = groups.find(function(x){ return x.id===gid; }); if (!g) return;
+        if (fbtn.dataset.fact === "toggle"){ g.folderOpen = !g.folderOpen; renderGroupedFolders(); }
+        if (fbtn.dataset.fact === "view"){ gotoTab("groups"); }
+        return;
+      }
+      var btn = e.target.closest("[data-act]"); if (!btn || btn.tagName === "INPUT" || btn.tagName === "SELECT") return;
+      handleVideoAction(btn);
+    });
+    $("groupedFolders").addEventListener("change", function(e){
+      var el = e.target.closest("[data-act]"); if (!el || el.dataset.act !== "remap") return;
+      var id = Number(el.dataset.id); var v = videos.find(function(x){ return x.id===id; }); if (!v) return;
+      var idx = Number(el.value);
+      if (!v.scan) v.scan = { type:null, shade:null, texture:null, length:null, productIdx:-1, confidence:0 };
+      v.scan.productIdx = idx; v.scan.confidence = idx > -1 ? 100 : 0;
+      renderVideos(); toast(idx > -1 ? "Mapped to " + CATALOG[idx].name + "." : "Product mapping cleared.");
     });
     $("videoCards").addEventListener("change", function(e){
       var el = e.target.closest("[data-act]"); if (!el) return;
@@ -824,15 +969,48 @@ No build step, no server, no dependencies. Catalog snapshot: see the Shop Catalo
       var btn = e.target.closest("[data-gact]"); if (!btn) return;
       var id = Number(btn.dataset.id); var gi = groups.findIndex(function(g){ return g.id===id; }); if (gi === -1) return;
       var g = groups[gi];
-      if (btn.dataset.gact === "copy") copyText(groupText(g, gi), "Group " + (gi+1) + " copy set copied.");
-      if (btn.dataset.gact === "regen"){ var c = genCopy(g); g.pt1 = c.pt1; g.pt2 = c.pt2; g.h1 = c.h1; g.h2 = c.h2; renderGroups(); toast("Copy regenerated for Group " + (gi+1) + "."); }
-      if (btn.dataset.gact === "del"){ groups.splice(gi, 1); renderGroups(); toast("Group deleted."); }
+      if (btn.dataset.gact === "copy") copyText(groupText(g, gi), (g.name || ("Group " + (gi+1))) + " copy set copied.");
+      if (btn.dataset.gact === "regen"){ var c = genCopy(g); g.pt1 = c.pt1; g.pt2 = c.pt2; g.h1 = c.h1; g.h2 = c.h2; renderGroups(); toast("Copy regenerated for " + (g.name || ("Group " + (gi+1))) + "."); }
+      if (btn.dataset.gact === "collapse"){ g.collapsed = !g.collapsed; renderGroups(); }
+      if (btn.dataset.gact === "launch"){
+        g.launched = !g.launched;
+        if (g.launched && !g.launchedDate){ var d = new Date(); g.launchedDate = d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0"); }
+        renderGroups(); renderVideos(); toast(g.launched ? (g.name + " marked as launched.") : (g.name + " marked as not launched."));
+      }
+      if (btn.dataset.gact === "del"){ groups.splice(gi, 1); renderGroups(); renderVideos(); toast("Group deleted — its videos are back in Ungrouped videos."); }
     });
     $("btnExport").addEventListener("click", function(){
       if (!groups.length){ toast("Create a group first."); return; }
       var head = "MACSARA HAIR — META ADS COPY (3:2:2 FLEXIBLE ADS)\nOffer: " + brand.offer + "\nExported: " + new Date().toLocaleDateString("en-US", { year:"numeric", month:"long", day:"numeric" }) + "\n============================================================\n\n";
       download("macsara-322-ad-copy.txt", head + groups.map(function(g, i){ return groupText(g, i); }).join("\n------------------------------------------------------------\n\n"));
       toast("Exported " + groups.length + " group(s) to macsara-322-ad-copy.txt");
+    });
+
+    /* ===== Group fields: rename, Ring, campaign, launched date (delegated) ===== */
+    $("groupList").addEventListener("input", function(e){
+      var el = e.target.closest("[data-gfield]"); if (!el) return;
+      var id = Number(el.dataset.id); var g = groups.find(function(x){ return x.id===id; }); if (!g) return;
+      if (el.dataset.gfield === "name"){ g.name = el.value; g.customName = true; }
+      if (el.dataset.gfield === "campaign") g.campaign = el.value;
+      if (el.dataset.gfield === "launchedDate") g.launchedDate = el.value;
+      saveState();
+    });
+    $("groupList").addEventListener("change", function(e){
+      var el = e.target.closest("[data-gfield]"); if (!el || el.dataset.gfield !== "ring") return;
+      var id = Number(el.dataset.id); var g = groups.find(function(x){ return x.id===id; }); if (!g) return;
+      g.ring = Number(el.value);
+      if (!g.customName) g.name = defaultGroupName(g.ring, g.id);
+      var c = genCopy(g); g.pt1 = c.pt1; g.pt2 = c.pt2; g.h1 = c.h1; g.h2 = c.h2;
+      renderGroups(); renderVideos(); toast(g.name + " — copy regenerated for the new Ring.");
+    });
+    $("groupFilters").addEventListener("click", function(e){
+      var b = e.target.closest("[data-gfilter]"); if (!b) return;
+      groupFilter = b.dataset.gfilter; renderGroups();
+    });
+    $("btnClearSaved").addEventListener("click", function(){
+      if (!window.confirm("Clear all videos and groups saved in this browser? Uploaded video files are already session-only.")) return;
+      try { localStorage.removeItem(LS_KEY); } catch(e){}
+      videos = []; groups = []; renderVideos(); renderGroups(); toast("Saved data cleared.");
     });
 
     /* ===== Brand form ===== */
@@ -855,6 +1033,7 @@ No build step, no server, no dependencies. Catalog snapshot: see the Shop Catalo
     $("btnCopyReadme").addEventListener("click", function(){ copyText($("readmeBox").textContent, "README.md copied."); });
 
     /* ===== Init ===== */
+    loadState();
     renderVideos(); renderGroups(); renderCatalog();
     </script>
   </body>
